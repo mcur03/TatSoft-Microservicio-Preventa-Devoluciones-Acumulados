@@ -1,4 +1,4 @@
-class GetPresale {
+class CancelPresale {
     private _id_presale: string;
     
     constructor(
@@ -18,4 +18,4 @@ class GetPresale {
     }    
 };
 
-export default GetPresale;
+export default CancelPresale;
