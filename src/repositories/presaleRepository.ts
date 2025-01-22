@@ -16,7 +16,7 @@ const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL
 class PresaleRepository{
 
 
-static async createPresaleWithDetails(presale: Presale, details: DetailsPresale[]): Promise<number> {
+static async registerPresale(presale: Presale, details: DetailsPresale[]): Promise<number> {
     const connection = await db.getConnection(); // Obtener conexión para la transacción
     try {
         await connection.beginTransaction();
@@ -75,7 +75,7 @@ static async createPresaleWithDetails(presale: Presale, details: DetailsPresale[
     static async getAll() {
         const sql = 'SELECT * FROM preventas';
         const [rows] = await db.query<RowDataPacket[]>(sql);
-        return rows[0];
+        return rows;
     }
 
     static async getById(getPresale : GetPresale){
@@ -83,10 +83,6 @@ static async createPresaleWithDetails(presale: Presale, details: DetailsPresale[
         const values = [getPresale.id_presale]; 
         const [rows] = await db.execute(sql, values);      
         return [rows]
-    }
-
-    static async getDetailPresale(getPresale : GetPresale){
-        
     }
 
     static async delete(deletePresale: DeletePresale){
@@ -107,6 +103,42 @@ static async createPresaleWithDetails(presale: Presale, details: DetailsPresale[
         const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle]
         return db.execute(sql,values);
     }
+
+    // para obtener toda la informacion de una preventa  
+    static async getIdsPresale(id_presale: string) {
+        const sql = `
+            SELECT 
+                p.id_preventa, 
+                p.id_cliente, 
+                p.id_colaborador, 
+                p.total, 
+                p.estado, 
+                dp.id_producto, 
+                dp.cantidad, 
+                dp.subtotal 
+            FROM preventas p 
+            INNER JOIN detalle_preventa dp 
+            ON p.id_preventa = dp.id_preventa 
+            WHERE p.id_preventa = ?`;
+    
+        const values = [id_presale];
+        const [rows]: any = await db.execute(sql, values);
+    
+        if (!rows || rows.length === 0) {
+            return null; // Preventa no encontrada
+        }
+    
+        // Agrupar productos en el array 'detalle'
+        const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+        const detalle = rows.map((row: any) => ({
+            id_producto: row.id_producto,
+            cantidad: row.cantidad,
+            subtotal: row.subtotal,
+        }));
+    
+        return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
+    }
+    
 }
 
 export default PresaleRepository;

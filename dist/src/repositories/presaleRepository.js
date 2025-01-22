@@ -18,7 +18,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 class PresaleRepository {
-    static createPresaleWithDetails(presale, details) {
+    static registerPresale(presale, details) {
         return __awaiter(this, void 0, void 0, function* () {
             const connection = yield db_1.default.getConnection(); // Obtener conexión para la transacción
             try {
@@ -70,7 +70,7 @@ class PresaleRepository {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = 'SELECT * FROM preventas';
             const [rows] = yield db_1.default.query(sql);
-            return rows[0];
+            return rows;
         });
     }
     static getById(getPresale) {
@@ -79,10 +79,6 @@ class PresaleRepository {
             const values = [getPresale.id_presale];
             const [rows] = yield db_1.default.execute(sql, values);
             return [rows];
-        });
-    }
-    static getDetailPresale(getPresale) {
-        return __awaiter(this, void 0, void 0, function* () {
         });
     }
     static delete(deletePresale) {
@@ -106,6 +102,38 @@ class PresaleRepository {
             const sql = 'UPDATE preventas SET id_producto = ?, cantidad = ? WHERE id_detalle = ?';
             const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle];
             return db_1.default.execute(sql, values);
+        });
+    }
+    // para obtener toda la informacion de una preventa  
+    static getIdsPresale(id_presale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sql = `
+            SELECT 
+                p.id_preventa, 
+                p.id_cliente, 
+                p.id_colaborador, 
+                p.total, 
+                p.estado, 
+                dp.id_producto, 
+                dp.cantidad, 
+                dp.subtotal 
+            FROM preventas p 
+            INNER JOIN detalle_preventa dp 
+            ON p.id_preventa = dp.id_preventa 
+            WHERE p.id_preventa = ?`;
+            const values = [id_presale];
+            const [rows] = yield db_1.default.execute(sql, values);
+            if (!rows || rows.length === 0) {
+                return null; // Preventa no encontrada
+            }
+            // Agrupar productos en el array 'detalle'
+            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const detalle = rows.map((row) => ({
+                id_producto: row.id_producto,
+                cantidad: row.cantidad,
+                subtotal: row.subtotal,
+            }));
+            return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
         });
     }
 }

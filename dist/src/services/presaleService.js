@@ -16,7 +16,7 @@ const presaleRepository_1 = __importDefault(require("../repositories/presaleRepo
 class PresaleService {
     static register_presale(presale, details) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield presaleRepository_1.default.createPresaleWithDetails(presale, details);
+            return yield presaleRepository_1.default.registerPresale(presale, details);
         });
     }
     static getAllPresales() {
@@ -42,6 +42,12 @@ class PresaleService {
     static updatePresale(updatePresale) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield presaleRepository_1.default.update(updatePresale);
+        });
+    }
+    // funcion para obtener los ids de la preventa
+    static get_idsPresale(id_presale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.getIdsPresale(id_presale);
         });
     }
 }

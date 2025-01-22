@@ -8,7 +8,7 @@ import PresaleRepository from "../repositories/presaleRepository";
 
 class PresaleService{
     static async register_presale(presale:Presale, details:DetailsPresale[]){
-        return await PresaleRepository.createPresaleWithDetails(presale, details);
+        return await PresaleRepository.registerPresale(presale, details);
     }
 
     static async getAllPresales(){
@@ -29,6 +29,11 @@ class PresaleService{
 
     static async updatePresale(updatePresale: UpdatePresale){
         return await PresaleRepository.update(updatePresale);
+    }
+
+    // funcion para obtener los ids de la preventa
+    static async get_idsPresale(id_presale: string){
+        return await PresaleRepository.getIdsPresale(id_presale);
     }
 }
 

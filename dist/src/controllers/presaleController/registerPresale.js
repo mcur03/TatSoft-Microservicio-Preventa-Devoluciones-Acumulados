@@ -14,18 +14,18 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const presaleDto_1 = __importDefault(require("../../Dto/DtoPresale/presaleDto"));
 const detailsPresaleDto_1 = __importDefault(require("../../Dto/DtoPresale/detailsPresaleDto"));
-const presaleRepository_1 = __importDefault(require("../../repositories/presaleRepository"));
+const presaleService_1 = __importDefault(require("../../services/presaleService"));
 let register_presale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id_cliente, id_colaborador, detalles } = req.body;
         const presale = new presaleDto_1.default('Pendiente', 0, id_cliente, id_colaborador);
         const details = detalles.map((detalle) => new detailsPresaleDto_1.default('', detalle.id_producto, detalle.cantidad));
-        const presaleId = yield presaleRepository_1.default.createPresaleWithDetails(presale, details);
+        const presaleId = yield presaleService_1.default.register_presale(presale, details);
         res.status(201).json({ message: 'Preventa creada', presaleId });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error al crear la preventa' });
+        res.status(500).json({ error: 'Error al crear la preventa', message: error.message });
     }
 });
 exports.default = register_presale;

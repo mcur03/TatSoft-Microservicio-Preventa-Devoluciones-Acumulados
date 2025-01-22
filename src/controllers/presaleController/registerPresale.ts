@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Presale from "../../Dto/DtoPresale/presaleDto";
 import DetailsPresale from "../../Dto/DtoPresale/detailsPresaleDto";
-import PresaleRepository from "../../repositories/presaleRepository";
+import PresaleService from "../../services/presaleService";
 
 let register_presale = async (req: Request, res: Response) => {
     try {
@@ -12,12 +12,12 @@ let register_presale = async (req: Request, res: Response) => {
             new DetailsPresale('', detalle.id_producto, detalle.cantidad)
         );
 
-        const presaleId = await PresaleRepository.createPresaleWithDetails(presale, details);
+        const presaleId = await PresaleService.register_presale(presale, details);
 
         res.status(201).json({ message: 'Preventa creada', presaleId });
-    } catch (error) {
+    } catch (error:any) {
         console.error(error);
-        res.status(500).json({ error: 'Error al crear la preventa' });
+        res.status(500).json({ error: 'Error al crear la preventa', message: error.message});
     }
 }
 
