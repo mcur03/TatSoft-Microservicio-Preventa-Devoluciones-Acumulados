@@ -8,12 +8,15 @@ let delete_presale = async (req: Request, res: Response) =>{
         const result = await PresaleService.deletePresale(new DeletePresale(id_presale));
         
         if(!result){
-            return res.status(404).json({error: 'Preventa no encrontrado'});
+            res.status(404).json({error: 'Preventa no encrontrado'});
+            return;
         }else{
-            return res.status(200).json({message:'La preventa fue eliminada'})
+            res.status(200).json({message:'La preventa fue eliminada'});
+            return;
         }
     } catch (error:any) {
-        return res.status(500).json({ error: "Error interno del servidor"});
+        res.status(500).json({ error: "Error interno del servidor"});
+        return;
     }
 }
 

@@ -1,4 +1,4 @@
-class CancelPresale {
+class EstatePresale {
     private _id_presale: string;
     
     constructor(
@@ -18,4 +18,4 @@ class CancelPresale {
     }    
 };
 
-export default CancelPresale;
+export default EstatePresale;

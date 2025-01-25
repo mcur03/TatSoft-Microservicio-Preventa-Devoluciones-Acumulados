@@ -1,19 +1,15 @@
 import { check, validationResult } from "express-validator";
 import { Request, Response, NextFunction } from "express";
 
-let validatorParams = [
-    check('id_preventa').isLength({min:1}).withMessage('El id del producto debe contener minimo un caracter').isNumeric().withMessage('Ingresa un número de id valido').bail()
+export let validatorParamsIdPresale = [
+    check('id_preventa').isLength({min:1}).withMessage('El id debe contener minimo un caracter').isNumeric().withMessage('Ingresa un número de id valido').bail()
 ];
 
-function validator(req:Request, res:Response, next:NextFunction){
+export function validatorIdPresale(req:Request, res:Response, next:NextFunction):void{
     const errors = validationResult(req);
     if(errors.isEmpty()){
-        return res.status(422).json({error: errors.array()})
+        res.status(422).json({error: errors.array()});
+        return;
     }
     next()
-}
-
-export default{
-    validatorParams,
-    validator
 }

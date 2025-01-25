@@ -2,13 +2,13 @@ class Presale{
     private _estado: string;
     private _total: number;
     private _id_cliente: string;
-    private _id_colaborador: string;
+    private _id_colaborador: number;
 
     constructor(
         estado:string,
         total:number,
         id_cliente:string,
-        id_colaborador:string
+        id_colaborador:number
     ){
         this._estado = estado;
         this._total = total;
@@ -29,7 +29,7 @@ class Presale{
         return this._id_cliente;
     }
 
-    get id_colaborador():string{
+    get id_colaborador():number{
         return this._id_colaborador
     }
 
@@ -46,7 +46,7 @@ class Presale{
         this._id_cliente = id_cliente;
     }
 
-    set id_colaborador(id_colaborador:string){
+    set id_colaborador(id_colaborador:number){
         this._id_colaborador = id_colaborador;
     }
 }

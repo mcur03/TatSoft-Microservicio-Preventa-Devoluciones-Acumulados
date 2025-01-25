@@ -2,23 +2,27 @@ import { Request, Response } from "express";
 import PresaleService from "../../services/presaleService";
 import UpdatePresale from "../../Dto/DtoPresale/updatePresaleDto";
 
-let update_presale = async(req:Request, res:Response) =>{
+let update_presale = async(req:Request, res:Response): Promise<void> =>{
     try {
         const { id_detalle } = req.params;
         const { id_producto, cantidad } = req.body;
 
         const result = await PresaleService.updatePresale(new UpdatePresale( id_detalle, id_producto, cantidad ))
         if(!result){
-            return res.status(404).json({ error: "Preventa no encontrado." });
+            res.status(404).json({ error: "Preventa no encontrado." });
+            return;
         }
         else{ 
-            return res.status(200).json({message:'Preventa actualizado con éxito'}); 
+            res.status(200).json({message:'Preventa actualizado con éxito'}); 
+            return;
         }
     } catch (error:any) {
         if(error && error.code == "ER_DUP_ENTRY"){
-            return res.status(500).json({errorInfo: error.sqlMessage})
+            res.status(500).json({errorInfo: error.sqlMessage});
+            return;
         }else{
-            return res.status(500).json({error: "Internal Server Error", details: error.message })
+            res.status(500).json({error: "Internal Server Error", details: error.message });
+            return;
         }
     }
 }

@@ -5,7 +5,9 @@ import PresaleService from "../../services/presaleService";
 
 let register_presale = async (req: Request, res: Response) => {
     try {
-        const { id_cliente, id_colaborador, detalles } = req.body;
+        const { id_cliente, detalles } = req.body;
+        const id_colaborador = req.body.id_usuario;
+        console.log(id_colaborador);
 
         const presale = new Presale('Pendiente', 0, id_cliente, id_colaborador);
         const details = detalles.map((detalle:any) => 

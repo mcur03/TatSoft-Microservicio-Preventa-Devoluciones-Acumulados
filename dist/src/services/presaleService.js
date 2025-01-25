@@ -24,9 +24,19 @@ class PresaleService {
             return yield presaleRepository_1.default.getAll();
         });
     }
+    static getAllPresalesColaborador(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.getAllColaborador(userId);
+        });
+    }
     static getByIdPresale(getPresale) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield presaleRepository_1.default.getById(getPresale);
+        });
+    }
+    static getByIdPresaleColaborador(getPresale, id_colaborador) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.getByIdColaborador(getPresale, id_colaborador);
         });
     }
     static deletePresale(deletePresale) {
@@ -39,15 +49,30 @@ class PresaleService {
             return yield presaleRepository_1.default.cancel(cancelPresale);
         });
     }
+    static confirmPresale(confirmPresale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.confirm(confirmPresale);
+        });
+    }
     static updatePresale(updatePresale) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield presaleRepository_1.default.update(updatePresale);
+        });
+    }
+    static addProductsPresale(addProductsPresale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.addProductsPresale(addProductsPresale);
         });
     }
     // funcion para obtener los ids de la preventa
     static get_idsPresale(id_presale) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield presaleRepository_1.default.getIdsPresale(id_presale);
+        });
+    }
+    static get_idsPresaleColaborador(id_presale, id_colaborador) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return yield presaleRepository_1.default.getIdsPresaleColaborador(id_presale, id_colaborador);
         });
     }
 }

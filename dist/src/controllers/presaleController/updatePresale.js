@@ -20,18 +20,22 @@ let update_presale = (req, res) => __awaiter(void 0, void 0, void 0, function* (
         const { id_producto, cantidad } = req.body;
         const result = yield presaleService_1.default.updatePresale(new updatePresaleDto_1.default(id_detalle, id_producto, cantidad));
         if (!result) {
-            return res.status(404).json({ error: "Preventa no encontrado." });
+            res.status(404).json({ error: "Preventa no encontrado." });
+            return;
         }
         else {
-            return res.status(200).json({ message: 'Preventa actualizado con éxito' });
+            res.status(200).json({ message: 'Preventa actualizado con éxito' });
+            return;
         }
     }
     catch (error) {
         if (error && error.code == "ER_DUP_ENTRY") {
-            return res.status(500).json({ errorInfo: error.sqlMessage });
+            res.status(500).json({ errorInfo: error.sqlMessage });
+            return;
         }
         else {
-            return res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            return;
         }
     }
 });

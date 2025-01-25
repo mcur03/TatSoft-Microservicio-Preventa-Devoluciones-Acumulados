@@ -17,20 +17,28 @@ const getPresaleDto_1 = __importDefault(require("../../Dto/DtoPresale/getPresale
 let getById_Presale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const { id_presale } = req.params;
-        const result = yield presaleService_1.default.getByIdPresale(new getPresaleDto_1.default(id_presale));
-        if (!result) {
-            return res.status(404).json({ error: 'Preventa no encontrada' });
+        const userRole = req.body.role;
+        const userId = req.body.id_usuario;
+        const result = userRole === "COLABORADOR"
+            ? yield presaleService_1.default.getByIdPresaleColaborador(new getPresaleDto_1.default(id_presale), userId)
+            : yield presaleService_1.default.getByIdPresale(new getPresaleDto_1.default(id_presale));
+        if (result.length === 0) {
+            res.status(404).json({ error: 'Preventa no encontrada' });
+            return;
         }
         else {
-            return res.status(200).json({ message: result });
+            res.status(200).json({ message: result });
+            return;
         }
     }
     catch (error) {
         if (error && error.code == "ER_DUP_ENTRY") {
-            return res.status(500).json({ errorInfo: error.sqlMessage });
+            res.status(500).json({ errorInfo: error.sqlMessage });
+            return;
         }
         else {
-            return res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            return;
         }
     }
 });

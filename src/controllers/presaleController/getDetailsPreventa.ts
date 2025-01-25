@@ -7,39 +7,45 @@ import DetailPresaleDTO from "../../Dto/DtoPresale/detailPresaleDto";
 
 let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
     try {
+        const userRole = req.body.role;
+        const userId = req.body.id_usuario;
         const { id_presale } = req.params;
         console.log('ID INGRESADO: ', id_presale);
 
-        // Consultar los datos locales de la preventa
-        const presale = await PresaleService.get_idsPresale(id_presale);
-        if (!presale) {
+        const result =
+            userRole === "COLABORADOR"
+                ? await PresaleService.get_idsPresaleColaborador(id_presale, userId)
+                : await PresaleService.get_idsPresale(id_presale);
+
+        // const presale = await PresaleService.get_idsPresale(id_presale, userId);
+        if (!result) {
             res.status(404).json({ error: 'Preventa no encontrada' });
             return;
         }
 
-        console.log('RESPUESTA PRESALE: ', presale);
+        console.log('RESPUESTA PRESALE: ', result);
 
-        if (!presale.id_cliente || !presale.id_colaborador) {
+        if (!result.id_cliente || !result.id_colaborador) {
             res.status(400).json({ error: 'Datos de la preventa incompletos' });
             return;
         }
 
         // Obtener datos del cliente
-        const client = await axios.get(`http://localhost:10102/api/client/${presale.id_cliente}`);
+        const client = await axios.get(`http://localhost:10102/api/client/${result.id_cliente}`);
         console.log('CLIENTE: ', client.data);
         
         // Obtener datos del colaborador-usuario
-        const user = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${presale.id_colaborador}`);
+        const user = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${result.id_colaborador}`);
         console.log('USER: ', user.data);
         
         // Obtener datos de todos los productos
-        const ids = presale.detalle.map((d: DetailsPresaleDTO) => d.id_producto).join(',');
+        const ids = result.detalle.map((d: DetailsPresaleDTO) => d.id_producto).join(',');
         const products = await axios.get(`http://localhost:10104/api/products?ids=${ids}`);
         console.log('PRODUCTOS: ', products.data);
         
         // Construir la respuesta final
         res.status(200).json({
-            id_preventa: presale.id_preventa,
+            id_preventa: result.id_preventa,
             cliente: {
                 nombre: client.data.nombre_completo_cliente,
                 direccion: client.data.direccion,
@@ -49,9 +55,9 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             colaborador: {
                 nombre: user.data,
             },
-            productos: presale.detalle.map((d: DetailPresaleDTO) => {
+            productos: result.detalle.map((d: DetailPresaleDTO) => {
                 const producto = products.data.products.find((p: ProductDTO) => p.id_producto === d.id_producto);
-                console.log('PRODUCTOS: PRESALE.DETALLE.MAP: ', producto);
+                console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
                 
                 return {
                     nombre: producto?.nombre_producto || 'Producto no encontrado',
@@ -60,8 +66,8 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
                     subtotal: d.subtotal,
                 };
             }),
-            total: presale.total,
-            estado: presale.estado,
+            total: result.total,
+            estado: result.estado,
         });
     } catch (error) {
         console.error(error);

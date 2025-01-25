@@ -7,11 +7,6 @@ export const validatorParams = [
         .withMessage('El ID del cliente debe ser un número entero positivo')
         .bail(),
 
-    check('id_colaborador')
-        .isInt({ gt: 0 })
-        .withMessage('El ID del colaborador debe ser un número entero positivo')
-        .bail(),
-
     body('detalles')
         .isArray({ min: 1 })
         .withMessage('Debe incluir al menos un detalle en la preventa')

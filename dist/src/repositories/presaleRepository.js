@@ -18,6 +18,7 @@ const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 class PresaleRepository {
+    // Registrar una preventa
     static registerPresale(presale, details) {
         return __awaiter(this, void 0, void 0, function* () {
             const connection = yield db_1.default.getConnection(); // Obtener conexión para la transacción
@@ -26,12 +27,13 @@ class PresaleRepository {
                 // Paso 1: Insertar la preventa
                 const presaleSql = 'INSERT INTO preventas (id_cliente, id_colaborador) VALUES (?, ?)';
                 const presaleValues = [presale.id_cliente, presale.id_colaborador];
+                console.log('ID_COLABORADOR: ', presale.id_colaborador);
                 const [presaleResult] = yield connection.execute(presaleSql, presaleValues);
                 const presaleId = presaleResult.insertId;
                 // Paso 2: Insertar los detalles
                 const detailSql = `
-            INSERT INTO detalle_preventa (id_preventa, id_producto, cantidad, subtotal) 
-            VALUES (?, ?, ?, ?)`;
+                INSERT INTO detalle_preventa (id_preventa, id_producto, cantidad, subtotal) 
+                VALUES (?, ?, ?, ?)`;
                 for (const detail of details) {
                     // Obtener el precio del producto desde el microservicio de productos
                     const productResponse = yield axios_1.default.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
@@ -50,9 +52,9 @@ class PresaleRepository {
                 }
                 // Paso 3: Calcular el total de la preventa
                 const totalSql = `
-            UPDATE preventas 
-            SET total = (SELECT SUM(subtotal) FROM detalle_preventa WHERE id_preventa = ?) 
-            WHERE id_preventa = ?`;
+                UPDATE preventas 
+                SET total = (SELECT SUM(subtotal) FROM detalle_preventa WHERE id_preventa = ?) 
+                WHERE id_preventa = ?`;
                 yield connection.execute(totalSql, [presaleId, presaleId]);
                 yield connection.commit();
                 return presaleId; // Devuelve el ID de la preventa creada
@@ -66,6 +68,7 @@ class PresaleRepository {
             }
         });
     }
+    // Obtener todos las preventas como administrador
     static getAll() {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = 'SELECT * FROM preventas';
@@ -73,14 +76,34 @@ class PresaleRepository {
             return rows;
         });
     }
+    // Obtener las preventas propias 
+    static getAllColaborador(userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sql = 'SELECT * FROM preventas WHERE id_colaborador = ?';
+            const values = [userId];
+            const [rows] = yield db_1.default.query(sql, values);
+            return rows;
+        });
+    }
+    // Obtener preventa por id como Administrador
     static getById(getPresale) {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = 'SELECT * FROM preventas WHERE id_preventa = ?';
             const values = [getPresale.id_presale];
             const [rows] = yield db_1.default.execute(sql, values);
-            return [rows];
+            return rows;
         });
     }
+    // Obtener preventa por ID como colaborador
+    static getByIdColaborador(getPresale, id_colaborador) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND id_colaborador = ?';
+            const values = [getPresale.id_presale, id_colaborador];
+            const [rows] = yield db_1.default.execute(sql, values);
+            return rows;
+        });
+    }
+    // Eliminar preventa, administrador
     static delete(deletePresale) {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = 'DELETE FROM prevetas WHERE id_preventa = ?';
@@ -97,14 +120,76 @@ class PresaleRepository {
             return result.affectedRows;
         });
     }
+    static confirm(confirmPresale) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sql = 'UPDATE preventas SET estado = "Confirmada" WHERE id_preventa = ?';
+            const values = [confirmPresale.id_presale];
+            const [result] = yield db_1.default.execute(sql, values);
+            return result.affectedRows;
+        });
+    }
+    // para editar un producto en la preventa 
     static update(updatePresale) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'UPDATE preventas SET id_producto = ?, cantidad = ? WHERE id_detalle = ?';
-            const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle];
+            // Verificar si id_detalle existe
+            const [detalle] = yield db_1.default.execute("SELECT 1 FROM detalle_preventa WHERE id_detalle = ?", [updatePresale.id_detalle]);
+            if (detalle.length === 0) {
+                throw new Error('Detalle de preventa no encontrado');
+            }
+            // Verificar si id_producto existe
+            const [producto] = yield db_1.default.execute("SELECT 1 FROM productos WHERE id_producto = ?", [updatePresale.id_producto]);
+            if (producto.length === 0) {
+                throw new Error('Detalle de preventa no encontrado');
+            }
+            const sql = 'UPDATE detalle_preventa SET id_producto = ?, cantidad = ? WHERE id_detalle = ? and id_producto = ?';
+            const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle, updatePresale.id_producto];
             return db_1.default.execute(sql, values);
         });
     }
-    // para obtener toda la informacion de una preventa  
+    // para agregar nuevos productos a la preventa
+    static addProductsPresale(addProducts) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const connection = yield db_1.default.getConnection();
+            try {
+                yield connection.beginTransaction();
+                // Paso 1: Insertar los productos
+                const productsSql = `INSERT INTO detalle_preventa (id_preventa, id_producto, cantidad, subtotal) VALUES (?, ?, ?, ?)`;
+                for (const detail of addProducts) {
+                    // Obtener el precio del producto desde el microservicio de productos
+                    const productResponse = yield axios_1.default.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
+                    console.log('RESPUESTA COMPLETA', productResponse);
+                    console.log('RESPUESTAAXIOS', productResponse.data);
+                    const price = productResponse.data.precio;
+                    if (!price) {
+                        throw new Error(`Precio no encontrado para el producto ${detail.id_producto}`);
+                    }
+                    console.log('PRECIO.P', price);
+                    // Calcular el subtotal
+                    const subtotal = price * detail.cantidad;
+                    // Insertar el detalle en la base de datos
+                    const productsValues = [detail.id_preventa, detail.id_producto, detail.cantidad, subtotal];
+                    yield connection.execute(productsSql, productsValues);
+                }
+                // Paso 3: Calcular el total de la preventa
+                const idPreventa = addProducts[0].id_preventa;
+                const totalSql = `
+                UPDATE preventas 
+                SET total = (SELECT SUM(subtotal) FROM detalle_preventa WHERE id_preventa = ?) 
+                WHERE id_preventa = ?`;
+                yield connection.execute(totalSql, [idPreventa, idPreventa]);
+                yield connection.commit();
+                return;
+            }
+            catch (error) {
+                yield connection.rollback();
+                throw error; // Re-lanzar el error para manejarlo
+            }
+            finally {
+                connection.release();
+            }
+        });
+    }
+    // para obtener toda la informacion de una preventa como Administrador
     static getIdsPresale(id_presale) {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = `
@@ -120,8 +205,40 @@ class PresaleRepository {
             FROM preventas p 
             INNER JOIN detalle_preventa dp 
             ON p.id_preventa = dp.id_preventa 
-            WHERE p.id_preventa = ?`;
+            WHERE p.id_preventa = ? AND p.id_colaborador = ?`;
             const values = [id_presale];
+            const [rows] = yield db_1.default.execute(sql, values);
+            if (!rows || rows.length === 0) {
+                return null; // Preventa no encontrada
+            }
+            // Agrupar productos en el array 'detalle'
+            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const detalle = rows.map((row) => ({
+                id_producto: row.id_producto,
+                cantidad: row.cantidad,
+                subtotal: row.subtotal,
+            }));
+            return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
+        });
+    }
+    // Obtener detalle de una preventa como colaborador
+    static getIdsPresaleColaborador(id_presale, userId) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const sql = `
+            SELECT 
+                p.id_preventa, 
+                p.id_cliente, 
+                p.id_colaborador, 
+                p.total, 
+                p.estado, 
+                dp.id_producto, 
+                dp.cantidad, 
+                dp.subtotal 
+            FROM preventas p 
+            INNER JOIN detalle_preventa dp 
+            ON p.id_preventa = dp.id_preventa 
+            WHERE p.id_preventa = ? AND p.id_colaborador = ?`;
+            const values = [id_presale, userId];
             const [rows] = yield db_1.default.execute(sql, values);
             if (!rows || rows.length === 0) {
                 return null; // Preventa no encontrada
