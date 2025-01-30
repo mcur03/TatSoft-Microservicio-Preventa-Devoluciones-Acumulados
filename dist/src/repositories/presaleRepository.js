@@ -37,18 +37,22 @@ class PresaleRepository {
                 for (const detail of details) {
                     // Obtener el precio del producto desde el microservicio de productos
                     const productResponse = yield axios_1.default.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                    console.log('RESPUESTA COMPLETA', productResponse);
-                    console.log('RESPUESTAAXIOS', productResponse.data);
-                    const price = productResponse.data.precio;
-                    if (!price) {
-                        throw new Error(`Precio no encontrado para el producto ${detail.id_producto}`);
+                    const product = yield axios_1.default.get(`http://localhost:10104/api/cantidadIngresada/${detail.id_producto}`);
+                    console.log('DATAPRODUCT', product.data);
+                    if (!product || product.data.cantidadIngreso < detail.cantidad) {
+                        throw new Error(`Stock insuficiente para el producto ${detail.id_producto}`);
                     }
-                    console.log('PRECIO.P', price);
-                    // Calcular el subtotal
+                    const price = productResponse.data.precio;
                     const subtotal = price * detail.cantidad;
                     // Insertar el detalle en la base de datos
                     const detailValues = [presaleId, detail.id_producto, detail.cantidad, subtotal];
                     yield connection.execute(detailSql, detailValues);
+                    let cantidad = product.data.cantidadIngreso - detail.cantidad;
+                    console.log('CANTIDADDDDD: ', cantidad);
+                    console.log('CANTIDAD-INGRESO:', product.data.cantidadIngreso);
+                    console.log('CANTIDAD:', detail.cantidad);
+                    // Actualizar la cantidad en el microservicio de productos
+                    yield axios_1.default.put(`http://localhost:10104/api/products/actualizar-cantidad/${detail.id_producto}/${cantidad}`);
                 }
                 // Paso 3: Calcular el total de la preventa
                 const totalSql = `
@@ -120,12 +124,46 @@ class PresaleRepository {
             return result.affectedRows;
         });
     }
-    static confirm(confirmPresale) {
+    static confirm(id_presale, returnedProductos) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'UPDATE preventas SET estado = "Confirmada" WHERE id_preventa = ?';
-            const values = [confirmPresale.id_presale];
-            const [result] = yield db_1.default.execute(sql, values);
-            return result.affectedRows;
+            const connection = yield db_1.default.getConnection();
+            try {
+                yield connection.beginTransaction();
+                // Validar que la preventa exista y esté pendiente
+                const [preventaRows] = yield connection.execute(`SELECT estado FROM preventas WHERE id_preventa = ?`, [id_presale]);
+                const preventa = preventaRows[0];
+                if (!preventa || preventa.estado !== 'Pendiente') {
+                    yield connection.rollback();
+                    return false; // Preventa no encontrada o ya confirmada
+                }
+                // Actualizar el estado de los productos devueltos
+                if (returnedProductos && returnedProductos.length > 0) {
+                    const placeholders = returnedProductos.map(() => '?').join(',');
+                    yield connection.execute(`
+                    UPDATE detalle_preventa 
+                    SET estado = 'devuelto' 
+                    WHERE id_preventa = ? AND id_producto IN (${placeholders})`, [id_presale, ...returnedProductos]);
+                }
+                // Confirmar la preventa
+                const [updateResult] = yield connection.execute(`
+                UPDATE preventas 
+                SET estado = 'Confirmada', fecha_confirmacion = NOW() 
+                WHERE id_preventa = ?`, [id_presale]);
+                // Confirmar que la actualización fue exitosa
+                if (updateResult.affectedRows === 0) {
+                    yield connection.rollback();
+                    return false;
+                }
+                yield connection.commit(); // Confirmar los cambios
+                return true;
+            }
+            catch (error) {
+                yield connection.rollback(); // Revertir los cambios en caso de error
+                throw error;
+            }
+            finally {
+                connection.release(); // Liberar la conexión
+            }
         });
     }
     // para editar un producto en la preventa 

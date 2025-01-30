@@ -35,8 +35,8 @@ class PresaleService{
         return await PresaleRepository.cancel(cancelPresale);
     }
 
-    static async confirmPresale(confirmPresale: EstatePresale){
-        return await PresaleRepository.confirm(confirmPresale);
+    static async confirmPresale(id_presale: string, returnedProductos: number[]){
+        return await PresaleRepository.confirm(id_presale, returnedProductos);
     }
 
     static async updatePresale(updatePresale: UpdatePresale){

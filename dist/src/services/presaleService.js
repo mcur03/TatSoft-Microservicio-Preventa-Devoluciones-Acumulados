@@ -49,9 +49,9 @@ class PresaleService {
             return yield presaleRepository_1.default.cancel(cancelPresale);
         });
     }
-    static confirmPresale(confirmPresale) {
+    static confirmPresale(id_presale, returnedProductos) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield presaleRepository_1.default.confirm(confirmPresale);
+            return yield presaleRepository_1.default.confirm(id_presale, returnedProductos);
         });
     }
     static updatePresale(updatePresale) {

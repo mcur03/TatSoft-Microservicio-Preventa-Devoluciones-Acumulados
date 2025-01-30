@@ -37,7 +37,8 @@ router.get("/detailsPresale/:id_presale", verifyToken, checkRoleAndPermission(["
 router.put("/cancelPreventa/:id_presale", verifyToken, checkRoleAndPermission(["COLABORADOR"]), validatorParamsIdPresale, validatorIdPresale, cancel_presale);
 
 // PUT: confirmarPreventa
-router.put("/confirmPresale/:id_presale", verifyToken, checkRoleAndPermission(["ADMINISTRADOR"]), validatorParamsIdPresale, validatorIdPresale, confirm_presale);
+router.put("/confirmPresale/:id_presale", confirm_presale);
+//router.put("/confirmPresale/:id_presale", verifyToken, checkRoleAndPermission(["ADMINISTRADOR"]), validatorParamsIdPresale, validatorIdPresale, confirm_presale);
 
 // PUT: Actualizar preventa
 router.put("/updatePresale/:id_detalle", verifyToken, checkRoleAndPermission(["COLABORADOR"]), validatorParamsIdDetallePresale, validatorIdDetallePresale, update_presale);

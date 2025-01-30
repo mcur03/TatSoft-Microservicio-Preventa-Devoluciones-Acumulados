@@ -20,7 +20,7 @@ class PresaleRepository{
         const connection = await db.getConnection(); // Obtener conexión para la transacción
         try {
             await connection.beginTransaction();
-
+            
             // Paso 1: Insertar la preventa
             const presaleSql = 'INSERT INTO preventas (id_cliente, id_colaborador) VALUES (?, ?)';
             const presaleValues = [presale.id_cliente, presale.id_colaborador];
@@ -37,23 +37,29 @@ class PresaleRepository{
             for (const detail of details) {
                 // Obtener el precio del producto desde el microservicio de productos
                 const productResponse = await axios.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                console.log('RESPUESTA COMPLETA', productResponse);
+                
+                const product = await axios.get(`http://localhost:10104/api/cantidadIngresada/${detail.id_producto}`);
+                console.log('DATAPRODUCT', product.data);
+                
 
-                console.log('RESPUESTAAXIOS', productResponse.data);
+                if (!product || product.data.cantidadIngreso < detail.cantidad) {
+                    throw new Error(`Stock insuficiente para el producto ${detail.id_producto}`);
+                }
 
                 const price = productResponse.data.precio;
-                if (!price) {
-                    throw new Error(`Precio no encontrado para el producto ${detail.id_producto}`);
-                }
-                console.log('PRECIO.P', price);
-
-
-                // Calcular el subtotal
                 const subtotal = price * detail.cantidad;
 
                 // Insertar el detalle en la base de datos
                 const detailValues = [presaleId, detail.id_producto, detail.cantidad, subtotal];
                 await connection.execute(detailSql, detailValues);
+                let cantidad = product.data.cantidadIngreso - detail.cantidad
+                console.log('CANTIDADDDDD: ', cantidad);
+                
+                console.log('CANTIDAD-INGRESO:', product.data.cantidadIngreso);
+                console.log('CANTIDAD:', detail.cantidad);
+                
+                  // Actualizar la cantidad en el microservicio de productos
+                await axios.put(`http://localhost:10104/api/products/actualizar-cantidad/${detail.id_producto}/${cantidad}`);
             }
 
             // Paso 3: Calcular el total de la preventa
@@ -119,11 +125,57 @@ class PresaleRepository{
         return result.affectedRows; 
     }
 
-    static async confirm(confirmPresale: EstatePresale){
-        const sql = 'UPDATE preventas SET estado = "Confirmada" WHERE id_preventa = ?';
-        const values = [confirmPresale.id_presale];
-        const [result]: any = await db.execute(sql, values);
-        return result.affectedRows; 
+    static async confirm(id_presale: string, returnedProductos: number[]){
+        const connection = await db.getConnection();
+        try {
+            await connection.beginTransaction();
+
+            // Validar que la preventa exista y esté pendiente
+            const [preventaRows]: any = await connection.execute(
+                `SELECT estado FROM preventas WHERE id_preventa = ?`,
+                [id_presale]
+            );
+            const preventa = preventaRows[0];
+            if (!preventa || preventa.estado !== 'Pendiente') {
+                await connection.rollback();
+                return false; // Preventa no encontrada o ya confirmada
+            }
+
+            // Actualizar el estado de los productos devueltos
+            if (returnedProductos && returnedProductos.length > 0) {
+                const placeholders = returnedProductos.map(() => '?').join(',');
+                await connection.execute(
+                    `
+                    UPDATE detalle_preventa 
+                    SET estado = 'devuelto' 
+                    WHERE id_preventa = ? AND id_producto IN (${placeholders})`,
+                    [id_presale, ...returnedProductos]
+                );
+            }
+
+            // Confirmar la preventa
+            const [updateResult]: any = await connection.execute(
+                `
+                UPDATE preventas 
+                SET estado = 'Confirmada', fecha_confirmacion = NOW() 
+                WHERE id_preventa = ?`,
+                [id_presale]
+            );
+
+            // Confirmar que la actualización fue exitosa
+            if (updateResult.affectedRows === 0) {
+                await connection.rollback();
+                return false;
+            }
+
+            await connection.commit(); // Confirmar los cambios
+            return true;
+        } catch (error) {
+            await connection.rollback(); // Revertir los cambios en caso de error
+            throw error;
+        } finally {
+            connection.release(); // Liberar la conexión
+        }
     }
     // para editar un producto en la preventa 
     static async update(updatePresale : UpdatePresale){
