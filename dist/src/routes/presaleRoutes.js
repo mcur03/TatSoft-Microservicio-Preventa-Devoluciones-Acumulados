@@ -32,8 +32,8 @@ router.get("/detailsPresale/:id_presale", verifyToken_1.default, (0, checkRoleAn
 // PUT: cancelar una preventa
 router.put("/cancelPreventa/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["COLABORADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, cancelPresale_1.default);
 // PUT: confirmarPreventa
-router.put("/confirmPresale/:id_presale", confirmPresale_1.default);
-//router.put("/confirmPresale/:id_presale", verifyToken, checkRoleAndPermission(["ADMINISTRADOR"]), validatorParamsIdPresale, validatorIdPresale, confirm_presale);
+//router.put("/confirmPresale/:id_presale", confirm_presale);
+router.put("/confirmPresale/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, confirmPresale_1.default);
 // PUT: Actualizar preventa
 router.put("/updatePresale/:id_detalle", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["COLABORADOR"]), idDetallePresaleValidator_1.validatorParamsIdDetallePresale, idDetallePresaleValidator_1.validatorIdDetallePresale, updatePresale_1.default);
 // DELETE: eliminar preventa
