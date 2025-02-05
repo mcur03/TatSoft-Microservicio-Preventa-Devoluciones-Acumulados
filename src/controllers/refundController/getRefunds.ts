@@ -1,20 +1,20 @@
 import { Request, Response } from "express";
-import SalesService from "../../services/salesService";
+import RefundService from "../../services/refundService";
 
-const getAll_sales = async (req: Request, res: Response): Promise<void> => {
+const getAll_refund = async (req: Request, res: Response): Promise<void> => {
     try {
         const userRole = req.body.role;
         const userId = req.body.id_usuario;
 
         const result =
             userRole === "COLABORADOR"
-                ? await SalesService.getAllSalesColaborador(userId)
-                : await SalesService.getAllSales();
+                ? await RefundService.getAllRefundColaborador(userId)
+                : await RefundService.getAllRefund();
         console.log('RESULT: ', result);
         
 
         if (!result) {
-            res.status(404).json({ error: 'No hay ventas' });
+            res.status(404).json({ error: 'No hay devoluciones' });
             return;
         }
 
@@ -28,4 +28,4 @@ const getAll_sales = async (req: Request, res: Response): Promise<void> => {
     }
 };
 
-export default getAll_sales;
+export default getAll_refund;
