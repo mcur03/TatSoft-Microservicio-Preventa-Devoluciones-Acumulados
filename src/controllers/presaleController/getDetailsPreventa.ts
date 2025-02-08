@@ -69,9 +69,9 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             total: result.total,
             estado: result.estado,
         });
-    } catch (error) {
+    } catch (error: any) {
         console.error(error);
-        res.status(500).json({ error: 'Error al obtener el detalle de la preventa' });
+        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
     }
 };
 

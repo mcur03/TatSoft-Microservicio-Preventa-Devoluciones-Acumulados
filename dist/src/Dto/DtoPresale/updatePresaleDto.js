@@ -1,14 +1,14 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 class UpdatePresale {
-    constructor(id_detalle, id_producto, cantidad) {
-        this._id_detalle = id_detalle;
+    constructor(id_preventa, id_producto, cantidad) {
+        this._id_preventa = id_preventa;
         this._id_producto = id_producto;
         this._cantidad = cantidad;
     }
     //getter
-    get id_detalle() {
-        return this._id_detalle;
+    get id_preventa() {
+        return this._id_preventa;
     }
     get id_producto() {
         return this._id_producto;
@@ -17,8 +17,8 @@ class UpdatePresale {
         return this._cantidad;
     }
     // setter
-    set id_detalle(id_detalle) {
-        this._id_detalle = id_detalle;
+    set id_preventa(id_preventa) {
+        this._id_preventa = id_preventa;
     }
     set id_producto(id_producto) {
         this._id_producto = id_producto;

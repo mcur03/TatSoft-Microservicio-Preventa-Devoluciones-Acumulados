@@ -31,16 +31,16 @@ class PresaleService{
         return await PresaleRepository.delete(deletePresale);
     }
 
-    static async cancelPresale(cancelPresale: EstatePresale){
-        return await PresaleRepository.cancel(cancelPresale);
+    static async cancelPresale(cancelPresale: EstatePresale, id_colaborador: number){
+        return await PresaleRepository.cancel(cancelPresale, id_colaborador);
     }
 
     static async confirmPresale(id_presale: string, returnedProductos: number[]){
         return await PresaleRepository.confirm(id_presale, returnedProductos);
     }
 
-    static async updatePresale(updatePresale: UpdatePresale){
-        return await PresaleRepository.update(updatePresale);
+    static async updatePresale(updatePresale: UpdatePresale, id_colaborador: number){
+        return await PresaleRepository.update(updatePresale, id_colaborador);
     }
 
     static async addProductsPresale(addProductsPresale: DetailsPresale[]){

@@ -22,7 +22,7 @@ let addProductsPresale = async (req: Request, res: Response): Promise<void> => {
         res.status(201).json({ message: 'Productos agregados'});
     } catch (error:any) {
         console.error(error);
-        res.status(500).json({ error: 'Error al agregar los productos', message: error.message});
+        res.status(500).json({ error: 'Error interno del servidor', details: error.message});
     }
 }
 

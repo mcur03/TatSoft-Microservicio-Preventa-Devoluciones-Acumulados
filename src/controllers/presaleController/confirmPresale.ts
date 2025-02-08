@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import PresaleService from "../../services/presaleService";
-import EstatePresale from "../../Dto/DtoPresale/EstatePresaleDto";
 
 let confirm_presale = async (req: Request, res: Response): Promise<void> => {
     try {
@@ -16,7 +15,7 @@ let confirm_presale = async (req: Request, res: Response): Promise<void> => {
         }
     } catch (error: any) {
         console.error(error);
-        res.status(500).json({ error: "Error interno del servidor" });
+        res.status(500).json({ error: "Error interno del servidor", details: error.message });
     }
     return;
 };

@@ -81,22 +81,22 @@ class PresaleRepository{
 
 // Obtener todos las preventas como administrador
     static async getAll() {
-        const sql = 'SELECT * FROM preventas';
+        const sql = `SELECT * FROM preventas WHERE estado = 'Pendiente'`;
         const [rows] = await db.query<RowDataPacket[]>(sql);
-        return rows;
+        return rows as Presale[];
     }
 
 // Obtener las preventas propias 
     static async getAllColaborador(userId: number) {
-        const sql = 'SELECT * FROM preventas WHERE id_colaborador = ?';
+        const sql = `SELECT * FROM preventas WHERE id_colaborador = ? AND estado = 'Pendiente'`;
         const values = [userId]
         const [rows] = await db.query(sql,values);
-        return rows;
+        return rows as Presale[];
     }
 
 // Obtener preventa por id como Administrador
     static async getById(getPresale : GetPresale){
-        const sql = 'SELECT * FROM preventas WHERE id_preventa = ?';
+        const sql = `SELECT * FROM preventas WHERE id_preventa = ? AND estado = 'Pendiente'`;
         const values = [getPresale.id_presale]; 
         const [rows] = await db.execute(sql, values);      
         return rows as Presale[];
@@ -104,7 +104,7 @@ class PresaleRepository{
 
 // Obtener preventa por ID como colaborador
     static async getByIdColaborador(getPresale : GetPresale, id_colaborador: number){
-        const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND id_colaborador = ?';
+        const sql = `SELECT * FROM preventas WHERE id_preventa = ? AND id_colaborador = ? AND estado = 'Pendiente'`;
         const values = [getPresale.id_presale, id_colaborador]; 
         const [rows] = await db.execute(sql, values);      
         return rows as Presale[];
@@ -118,9 +118,9 @@ class PresaleRepository{
         return result.affectedRows; // Devuelve el número de filas afectadas.
     }
 
-    static async cancel(cancelPresale: EstatePresale){
-        const sql = 'UPDATE preventas SET estado = "Cancelada" WHERE id_preventa = ?';
-        const values = [cancelPresale.id_presale];
+    static async cancel(cancelPresale: EstatePresale, id_colaborador: number){
+        const sql = 'UPDATE preventas SET estado = "Cancelada" WHERE id_preventa = ? AND id_colaborador = ?';
+        const values = [cancelPresale.id_presale, id_colaborador];
         const [result]: any = await db.execute(sql, values);
         return result.affectedRows; 
     }
@@ -178,20 +178,22 @@ class PresaleRepository{
         }
     }
     // para editar un producto en la preventa 
-    static async update(updatePresale : UpdatePresale){
+    static async update(updatePresale : UpdatePresale, id_colaborador: number){
         // Verificar si id_detalle existe
-        const [detalle] = await db.execute<RowDataPacket[]>("SELECT 1 FROM detalle_preventa WHERE id_detalle = ?", [updatePresale.id_detalle]);
+        if (!updatePresale.id_preventa) {
+            throw new Error("id_preventa es undefined o null");
+        }
+        const [detalle] = await db.execute<RowDataPacket[]>(`
+                SELECT 1 FROM detalle_preventa dp 
+                INNER JOIN preventas p ON dp.id_preventa = p.id_preventa  
+                WHERE dp.id_preventa = ? AND p.id_colaborador = ? AND dp.id_producto = ?
+            `, [updatePresale.id_preventa, id_colaborador, updatePresale.id_producto]);
         if (detalle.length === 0) {
             throw new Error('Detalle de preventa no encontrado');
         }
 
-        // Verificar si id_producto existe
-        const [producto] = await db.execute<RowDataPacket[]>("SELECT 1 FROM productos WHERE id_producto = ?", [updatePresale.id_producto]);
-        if (producto.length === 0) {
-            throw new Error('Detalle de preventa no encontrado');
-        }
-        const sql = 'UPDATE detalle_preventa SET id_producto = ?, cantidad = ? WHERE id_detalle = ? and id_producto = ?';
-        const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle, updatePresale.id_producto];
+        const sql = 'UPDATE detalle_preventa SET id_producto = ?, cantidad = ? WHERE id_preventa = ? and id_producto = ?';
+        const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_preventa, updatePresale.id_producto];
         return db.execute(sql,values);
     }
 
@@ -256,7 +258,7 @@ class PresaleRepository{
             FROM preventas p 
             INNER JOIN detalle_preventa dp 
             ON p.id_preventa = dp.id_preventa 
-            WHERE p.id_preventa = ? AND p.id_colaborador = ?`;
+            WHERE p.id_preventa = ?`;
     
         const values = [id_presale];
         const [rows]: any = await db.execute(sql, values);

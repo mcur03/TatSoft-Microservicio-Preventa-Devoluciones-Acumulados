@@ -41,7 +41,7 @@ router.put("/cancelPreventa/:id_presale", verifyToken, checkRoleAndPermission(["
 router.put("/confirmPresale/:id_presale", verifyToken, checkRoleAndPermission(["ADMINISTRADOR"]), validatorParamsIdPresale, validatorIdPresale, confirm_presale);
 
 // PUT: Actualizar preventa
-router.put("/updatePresale/:id_detalle", verifyToken, checkRoleAndPermission(["COLABORADOR"]), validatorParamsIdDetallePresale, validatorIdDetallePresale, update_presale);
+router.put("/updatePresale/:id_preventa", verifyToken, checkRoleAndPermission(["COLABORADOR"]), validatorParamsIdDetallePresale, validatorIdDetallePresale, update_presale);
 
 // DELETE: eliminar preventa
 router.delete("/deletePresale/:id_preventa",  verifyToken, checkRoleAndPermission(["ADMINISTRADOR"]), delete_presale )

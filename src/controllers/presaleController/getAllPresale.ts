@@ -11,7 +11,12 @@ const getAll_presale = async (req: Request, res: Response): Promise<void> => {
                 ? await PresaleService.getAllPresalesColaborador(userId)
                 : await PresaleService.getAllPresales();
 
+        if(result.length === 0){
+            res.status(404).json({error: 'No hay registros'})
+            return;
+        }
         // const result = await PresaleService.getAllPresales();
+
         res.status(200).json({ message: result });
     } catch (error: any) {
         if (error && error.code === "ER_DUP_ENTRY") {

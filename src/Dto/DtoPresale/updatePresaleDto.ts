@@ -1,21 +1,21 @@
 class UpdatePresale{
-    private _id_detalle: string;
+    private _id_preventa: string;
     private _id_producto: string;
     private _cantidad: number;
 
     constructor(
-        id_detalle:string,
+        id_preventa:string,
         id_producto:string,
         cantidad:number
     ){
-        this._id_detalle = id_detalle;
+        this._id_preventa = id_preventa;
         this._id_producto = id_producto;
         this._cantidad = cantidad;
     }
 
     //getter
-    get id_detalle():string{
-        return this._id_detalle;
+    get id_preventa():string{
+        return this._id_preventa;
     }
     
     get id_producto():string{
@@ -27,8 +27,8 @@ class UpdatePresale{
     }
 
     // setter
-    set id_detalle(id_detalle:string){
-        this._id_detalle = id_detalle;
+    set id_preventa(id_preventa:string){
+        this._id_preventa = id_preventa;
     }
     
     set id_producto(id_producto:string){
