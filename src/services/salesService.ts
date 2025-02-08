@@ -1,6 +1,5 @@
 import axios from "axios";
 import SalesRepository from "../repositories/salesRepository";
-import DetailSaleDTO from "../Dto/DtoSales/detailSaleDto";
 import GetSale from "../Dto/DtoSales/getSaleDto";
 
 class SalesService{

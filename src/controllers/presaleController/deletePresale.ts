@@ -15,7 +15,7 @@ let delete_presale = async (req: Request, res: Response) =>{
             return;
         }
     } catch (error:any) {
-        res.status(500).json({ error: "Error interno del servidor"});
+        res.status(500).json({ error: "Error interno del servidor", details: error.message});
         return;
     }
 }

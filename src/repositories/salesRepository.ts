@@ -118,20 +118,47 @@ static async getSaleDetailsColaborador(id_presale: string, userId:string){
         //return rows as SalesDTO[];
     }
 
-// Obtener preventa por id como Administrador
+// Obtener venta por id como Administrador
 static async getById(getSale : GetSale){
-    const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND estado = "Confirmada"';
+    const sql = `
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.id_cliente,
+            SUM(dp.subtotal) AS total_vendido
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.id_preventa = ?
+        AND p.estado = 'Confirmada' 
+        AND dp.estado = 'vendido'
+        GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
+    `;
     const values = [getSale.id_presale]; 
     const [rows] = await db.execute(sql, values);      
     return rows as SalesDTO[];
 }
 
-// Obtener preventa por ID como colaborador
+// Obtener venta por ID como colaborador
 static async getByIdColaborador(getSale : GetSale, id_colaborador: number){
-    const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND estado = "Confirmada" AND id_colaborador = ?';
+    const sql = `
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.id_cliente,
+            SUM(dp.subtotal) AS total_vendido
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.id_preventa = ?
+        AND p.id_colaborador = ?
+        AND p.estado = 'Confirmada' 
+        AND dp.estado = 'vendido'
+        GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
+    `;
     const values = [getSale.id_presale, id_colaborador]; 
     const [rows] = await db.execute(sql, values);      
-    return rows as SalesDTO[];
+    return rows as GetSale[];
 }
 }
 

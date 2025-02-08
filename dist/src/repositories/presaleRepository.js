@@ -75,7 +75,7 @@ class PresaleRepository {
     // Obtener todos las preventas como administrador
     static getAll() {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas';
+            const sql = `SELECT * FROM preventas WHERE estado = 'Pendiente'`;
             const [rows] = yield db_1.default.query(sql);
             return rows;
         });
@@ -83,7 +83,7 @@ class PresaleRepository {
     // Obtener las preventas propias 
     static getAllColaborador(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas WHERE id_colaborador = ?';
+            const sql = `SELECT * FROM preventas WHERE id_colaborador = ? AND estado = 'Pendiente'`;
             const values = [userId];
             const [rows] = yield db_1.default.query(sql, values);
             return rows;
@@ -92,7 +92,7 @@ class PresaleRepository {
     // Obtener preventa por id como Administrador
     static getById(getPresale) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas WHERE id_preventa = ?';
+            const sql = `SELECT * FROM preventas WHERE id_preventa = ? AND estado = 'Pendiente'`;
             const values = [getPresale.id_presale];
             const [rows] = yield db_1.default.execute(sql, values);
             return rows;
@@ -101,7 +101,7 @@ class PresaleRepository {
     // Obtener preventa por ID como colaborador
     static getByIdColaborador(getPresale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND id_colaborador = ?';
+            const sql = `SELECT * FROM preventas WHERE id_preventa = ? AND id_colaborador = ? AND estado = 'Pendiente'`;
             const values = [getPresale.id_presale, id_colaborador];
             const [rows] = yield db_1.default.execute(sql, values);
             return rows;
@@ -116,10 +116,10 @@ class PresaleRepository {
             return result.affectedRows; // Devuelve el número de filas afectadas.
         });
     }
-    static cancel(cancelPresale) {
+    static cancel(cancelPresale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'UPDATE preventas SET estado = "Cancelada" WHERE id_preventa = ?';
-            const values = [cancelPresale.id_presale];
+            const sql = 'UPDATE preventas SET estado = "Cancelada" WHERE id_preventa = ? AND id_colaborador = ?';
+            const values = [cancelPresale.id_presale, id_colaborador];
             const [result] = yield db_1.default.execute(sql, values);
             return result.affectedRows;
         });
@@ -167,20 +167,22 @@ class PresaleRepository {
         });
     }
     // para editar un producto en la preventa 
-    static update(updatePresale) {
+    static update(updatePresale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
             // Verificar si id_detalle existe
-            const [detalle] = yield db_1.default.execute("SELECT 1 FROM detalle_preventa WHERE id_detalle = ?", [updatePresale.id_detalle]);
+            if (!updatePresale.id_preventa) {
+                throw new Error("id_preventa es undefined o null");
+            }
+            const [detalle] = yield db_1.default.execute(`
+                SELECT 1 FROM detalle_preventa dp 
+                INNER JOIN preventas p ON dp.id_preventa = p.id_preventa  
+                WHERE dp.id_preventa = ? AND p.id_colaborador = ? AND dp.id_producto = ?
+            `, [updatePresale.id_preventa, id_colaborador, updatePresale.id_producto]);
             if (detalle.length === 0) {
                 throw new Error('Detalle de preventa no encontrado');
             }
-            // Verificar si id_producto existe
-            const [producto] = yield db_1.default.execute("SELECT 1 FROM productos WHERE id_producto = ?", [updatePresale.id_producto]);
-            if (producto.length === 0) {
-                throw new Error('Detalle de preventa no encontrado');
-            }
-            const sql = 'UPDATE detalle_preventa SET id_producto = ?, cantidad = ? WHERE id_detalle = ? and id_producto = ?';
-            const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_detalle, updatePresale.id_producto];
+            const sql = 'UPDATE detalle_preventa SET id_producto = ?, cantidad = ? WHERE id_preventa = ? and id_producto = ?';
+            const values = [updatePresale.id_producto, updatePresale.cantidad, updatePresale.id_preventa, updatePresale.id_producto];
             return db_1.default.execute(sql, values);
         });
     }
@@ -243,7 +245,7 @@ class PresaleRepository {
             FROM preventas p 
             INNER JOIN detalle_preventa dp 
             ON p.id_preventa = dp.id_preventa 
-            WHERE p.id_preventa = ? AND p.id_colaborador = ?`;
+            WHERE p.id_preventa = ?`;
             const values = [id_presale];
             const [rows] = yield db_1.default.execute(sql, values);
             if (!rows || rows.length === 0) {

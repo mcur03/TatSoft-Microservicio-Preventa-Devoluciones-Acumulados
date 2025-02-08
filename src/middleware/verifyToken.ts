@@ -36,14 +36,14 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction): Pro
             next(); 
         } catch (error) {
             res.status(403).json({
-                status: 'Unauthorized',
+                status: 'No autorizado',
                 error: (error as Error).message // Mensaje de error detallado
             });
             return;
         }
     } else {
-        res.status(403).json({
-            status: "El token es obligatorio"
+        res.status(401).json({
+            status: "token inválido o expirado"
         });
         return;
     }

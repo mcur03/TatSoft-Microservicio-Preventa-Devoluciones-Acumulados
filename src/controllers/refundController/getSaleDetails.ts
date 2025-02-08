@@ -1,32 +1,29 @@
-import { Request, Response } from "express";
-import PresaleService from "../../services/presaleService";
-import axios from "axios";
-import DetailsPresaleDTO from "../../Dto/DtoPresale/detailsPresaleDto";
-import ProductDTO from "../../Dto/DtoPresale/productDto";
-import DetailPresaleDTO from "../../Dto/DtoPresale/detailPresaleDto";
+import { Request, Response } from 'express';
+import RefundService from '../../services/refundService';
+import axios from 'axios';
+import DetailRefundDTO from '../../Dto/DtoRefund/detailRefundDto';
+import ProductDTO from '../../Dto/DtoRefund/ProductoDto';
 
-let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
+const getRefundDetails = async (req: Request, res: Response) => {
     try {
         const userRole = req.body.role;
         const userId = req.body.id_usuario;
         const { id_presale } = req.params;
-        console.log('ID INGRESADO: ', id_presale);
 
         const result =
             userRole === "COLABORADOR"
-                ? await PresaleService.get_idsPresaleColaborador(id_presale, userId)
-                : await PresaleService.get_idsPresale(id_presale);
+                ? await RefundService.getRefundDetailsColaborador(id_presale, userId)
+                : await RefundService.getRefundDetails(id_presale);
 
-        // const presale = await PresaleService.get_idsPresale(id_presale, userId);
         if (!result) {
-            res.status(404).json({ error: 'Preventa no encontrada' });
+            res.status(404).json({ error: 'Devolución no encontrada' });
             return;
         }
 
         console.log('RESPUESTA PRESALE: ', result);
 
         if (!result.id_cliente || !result.id_colaborador) {
-            res.status(400).json({ error: 'Datos de la preventa incompletos' });
+            res.status(400).json({ error: 'Datos de la devolución incompletos' });
             return;
         }
 
@@ -39,7 +36,7 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
         console.log('USER: ', user.data);
         
         // Obtener datos de todos los productos
-        const ids = result.detalle.map((d: DetailsPresaleDTO) => d.id_producto).join(',');
+        const ids = result.detalle.map((d: DetailRefundDTO) => d.id_producto).join(',');
         const products = await axios.get(`http://localhost:10104/api/products?ids=${ids}`);
         console.log('PRODUCTOS: ', products.data);
         
@@ -55,7 +52,7 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             colaborador: {
                 nombre: user.data,
             },
-            productos: result.detalle.map((d: DetailPresaleDTO) => {
+            productos: result.detalle.map((d: DetailRefundDTO) => {
                 const producto = products.data.products.find((p: ProductDTO) => p.id_producto === d.id_producto);
                 console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
                 
@@ -71,8 +68,8 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
         });
     } catch (error: any) {
         console.error(error);
-        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+        res.status(500).json({ error: 'Error interno del servidor', message: error.message });
     }
 };
 
-export default get_detailsPresale;
+export default getRefundDetails;

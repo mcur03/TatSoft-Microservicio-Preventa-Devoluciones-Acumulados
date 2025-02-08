@@ -123,19 +123,46 @@ class SalesRepository {
             //return rows as SalesDTO[];
         });
     }
-    // Obtener preventa por id como Administrador
+    // Obtener venta por id como Administrador
     static getById(getSale) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND estado = "Confirmada"';
+            const sql = `
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.id_cliente,
+            SUM(dp.subtotal) AS total_vendido
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.id_preventa = ?
+        AND p.estado = 'Confirmada' 
+        AND dp.estado = 'vendido'
+        GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
+    `;
             const values = [getSale.id_presale];
             const [rows] = yield db_1.default.execute(sql, values);
             return rows;
         });
     }
-    // Obtener preventa por ID como colaborador
+    // Obtener venta por ID como colaborador
     static getByIdColaborador(getSale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'SELECT * FROM preventas WHERE id_preventa = ? AND estado = "Confirmada" AND id_colaborador = ?';
+            const sql = `
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.id_cliente,
+            SUM(dp.subtotal) AS total_vendido
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.id_preventa = ?
+        AND p.id_colaborador = ?
+        AND p.estado = 'Confirmada' 
+        AND dp.estado = 'vendido'
+        GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
+    `;
             const values = [getSale.id_presale, id_colaborador];
             const [rows] = yield db_1.default.execute(sql, values);
             return rows;

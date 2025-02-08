@@ -16,10 +16,10 @@ let register_presale = async (req: Request, res: Response) => {
 
         const presaleId = await PresaleService.register_presale(presale, details);
 
-        res.status(201).json({ message: 'Preventa creada', presaleId });
+        res.status(201).json({ message: 'Preventa creada'});
     } catch (error:any) {
         console.error(error);
-        res.status(500).json({ error: 'Error al crear la preventa', message: error.message});
+        res.status(500).json({ error: 'Error interno del sesrvidor', details: error.message});
     }
 }
 

@@ -44,9 +44,9 @@ class PresaleService {
             return yield presaleRepository_1.default.delete(deletePresale);
         });
     }
-    static cancelPresale(cancelPresale) {
+    static cancelPresale(cancelPresale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield presaleRepository_1.default.cancel(cancelPresale);
+            return yield presaleRepository_1.default.cancel(cancelPresale, id_colaborador);
         });
     }
     static confirmPresale(id_presale, returnedProductos) {
@@ -54,9 +54,9 @@ class PresaleService {
             return yield presaleRepository_1.default.confirm(id_presale, returnedProductos);
         });
     }
-    static updatePresale(updatePresale) {
+    static updatePresale(updatePresale, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
-            return yield presaleRepository_1.default.update(updatePresale);
+            return yield presaleRepository_1.default.update(updatePresale, id_colaborador);
         });
     }
     static addProductsPresale(addProductsPresale) {

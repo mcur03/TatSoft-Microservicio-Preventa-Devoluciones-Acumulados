@@ -1,16 +1,19 @@
-class UpdatePresale{
+class DetailRefundDTO {
     private _id_preventa: string;
     private _id_producto: string;
     private _cantidad: number;
+    private _subtotal: number;
 
     constructor(
-        id_preventa:string,
+        id_preveta:string,
         id_producto:string,
-        cantidad:number
+        cantidad:number,
+        subtotal:number
     ){
-        this._id_preventa = id_preventa;
+        this._id_preventa = id_preveta;
         this._id_producto = id_producto;
         this._cantidad = cantidad;
+        this._subtotal = subtotal;
     }
 
     //getter
@@ -26,7 +29,11 @@ class UpdatePresale{
         return this._cantidad;
     }
 
-    // setter
+    get subtotal(){
+        return this._subtotal
+    }
+
+    //setter
     set id_preventa(id_preventa:string){
         this._id_preventa = id_preventa;
     }
@@ -38,6 +45,10 @@ class UpdatePresale{
     set cantidad(cantidad:number){
         this._cantidad = cantidad;
     }
+    
+    set subtotal(subtotal:number){
+        this._subtotal = subtotal;
+    }
 }
 
-export default UpdatePresale;
+export default DetailRefundDTO;

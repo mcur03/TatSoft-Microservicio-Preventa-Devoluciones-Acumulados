@@ -23,11 +23,11 @@ let register_presale = (req, res) => __awaiter(void 0, void 0, void 0, function*
         const presale = new presaleDto_1.default('Pendiente', 0, id_cliente, id_colaborador);
         const details = detalles.map((detalle) => new detailsPresaleDto_1.default('', detalle.id_producto, detalle.cantidad));
         const presaleId = yield presaleService_1.default.register_presale(presale, details);
-        res.status(201).json({ message: 'Preventa creada', presaleId });
+        res.status(201).json({ message: 'Preventa creada' });
     }
     catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Error al crear la preventa', message: error.message });
+        res.status(500).json({ error: 'Error en el servidor' });
     }
 });
 exports.default = register_presale;
