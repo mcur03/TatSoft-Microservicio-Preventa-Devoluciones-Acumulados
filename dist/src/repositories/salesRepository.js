@@ -61,14 +61,17 @@ class SalesRepository {
     // Obtener el detalle de una venta como administrador
     static getSaleDetails(id_presale) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const sql = `
             SELECT 
                 p.id_preventa,
                 p.fecha_confirmacion,
                 p.id_colaborador,
+                p.estado,
                 p.id_cliente,
                 dp.id_producto,
-                dp.cantidad
+                dp.cantidad,
+                dp.subtotal
             FROM preventas p
             JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
             WHERE p.estado = 'Confirmada'
@@ -80,7 +83,11 @@ class SalesRepository {
             if (!rows || rows.length === 0) {
                 return null; // Preventa no encontrada
             }
-            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+            const [totalRows] = yield db_1.default.execute(totalSQL, [id_presale]);
+            const total = ((_a = totalRows[0]) === null || _a === void 0 ? void 0 : _a.total_devoluciones) || 0; // Extraer solo el valor // <-- CORREGIDO
+            console.log('TOTALL:', total);
+            const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
             const detalle = rows.map((row) => ({
                 id_producto: row.id_producto,
                 cantidad: row.cantidad,
@@ -93,14 +100,17 @@ class SalesRepository {
     // Obtener el datelle de una venta como colaborador
     static getSaleDetailsColaborador(id_presale, userId) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const sql = `
             SELECT 
                 p.id_preventa,
                 p.fecha_confirmacion,
                 p.id_colaborador,
+                p.estado,
                 p.id_cliente,
                 dp.id_producto,
-                dp.cantidad
+                dp.cantidad,
+                dp.subtotal
             FROM preventas p
             JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
             WHERE p.estado = 'Confirmada'
@@ -113,14 +123,16 @@ class SalesRepository {
             if (!rows || rows.length === 0) {
                 return null; // Preventa no encontrada
             }
-            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+            const [totalRows] = yield db_1.default.execute(totalSQL, [id_presale]);
+            const total = ((_a = totalRows[0]) === null || _a === void 0 ? void 0 : _a.total_devoluciones) || 0;
+            const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
             const detalle = rows.map((row) => ({
                 id_producto: row.id_producto,
                 cantidad: row.cantidad,
                 subtotal: row.subtotal,
             }));
             return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
-            //return rows as SalesDTO[];
         });
     }
     // Obtener venta por id como Administrador

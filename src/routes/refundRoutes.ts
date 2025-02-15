@@ -2,7 +2,7 @@ import express from "express";
 import verifyToken from "../middleware/verifyToken";
 import checkRoleAndPermission from "../middleware/checkRoleAndPermission";
 import getAll_refund from "../controllers/refundController/getRefunds";
-import getRefundDetails from "../controllers/refundController/getSaleDetails";
+import getRefundDetails from "../controllers/refundController/getRefundDetails";
 import getById_Refund from "../controllers/refundController/getByIdRefund";
 
 const router = express.Router();

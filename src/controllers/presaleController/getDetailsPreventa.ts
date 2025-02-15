@@ -80,7 +80,7 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             if (error.response?.status === 404) {
               res.status(404).json({ message: 'La información no existe' });
             }
-            res.status(error.response?.status || 500).json({ message: 'Error en el microservicio productos o clientes' });
+            res.status(error.response?.status || 500).json({ message: 'Error en el microservicio productos, clientes o usuarios' });
           }
       
           console.error(error);
