@@ -16,7 +16,6 @@ const axios_1 = __importDefault(require("axios"));
 const db_1 = __importDefault(require("../config/db"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
-const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL;
 class PresaleRepository {
     // Registrar una preventa
     static registerPresale(presale, details) {
@@ -36,23 +35,28 @@ class PresaleRepository {
                 VALUES (?, ?, ?, ?)`;
                 for (const detail of details) {
                     // Obtener el precio del producto desde el microservicio de productos
-                    const productResponse = yield axios_1.default.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                    const product = yield axios_1.default.get(`http://localhost:10104/api/cantidadIngresada/${detail.id_producto}`);
-                    console.log('DATAPRODUCT', product.data);
-                    if (!product || product.data.cantidadIngreso < detail.cantidad) {
+                    const productResponse = yield axios_1.default.get(`${process.env.PRODUCT_SERVICE_URL}${detail.id_producto}`);
+                    const productData = productResponse.data[0];
+                    console.log('PRODUCT_DATA', productData);
+                    if (!productData) {
+                        throw new Error(`No se encontró información para el producto con ID ${detail.id_producto}`);
+                    }
+                    // Obtener el precio y la cantidad en stock
+                    const price = parseFloat(productData.precio);
+                    const stock = productData.cantidad_ingreso;
+                    console.log('DATAPRODUCTooooooooooo', stock);
+                    if (stock < detail.cantidad) {
                         throw new Error(`Stock insuficiente para el producto ${detail.id_producto}`);
                     }
-                    const price = productResponse.data.precio;
                     const subtotal = price * detail.cantidad;
                     // Insertar el detalle en la base de datos
                     const detailValues = [presaleId, detail.id_producto, detail.cantidad, subtotal];
                     yield connection.execute(detailSql, detailValues);
-                    let cantidad = product.data.cantidadIngreso - detail.cantidad;
+                    let cantidad = stock - detail.cantidad;
                     console.log('CANTIDADDDDD: ', cantidad);
-                    console.log('CANTIDAD-INGRESO:', product.data.cantidadIngreso);
                     console.log('CANTIDAD:', detail.cantidad);
                     // Actualizar la cantidad en el microservicio de productos
-                    yield axios_1.default.put(`http://localhost:10104/api/products/actualizar-cantidad/${detail.id_producto}/${cantidad}`);
+                    yield axios_1.default.put(`${process.env.PRODUCT_SERVICE_URL_ACTUALIZAR_CANTIDAD}${detail.id_producto}/${cantidad}`);
                 }
                 // Paso 3: Calcular el total de la preventa
                 const totalSql = `
@@ -110,7 +114,7 @@ class PresaleRepository {
     // Eliminar preventa, administrador
     static delete(deletePresale) {
         return __awaiter(this, void 0, void 0, function* () {
-            const sql = 'DELETE FROM prevetas WHERE id_preventa = ?';
+            const sql = 'DELETE FROM preventas WHERE id_preventa = ?';
             const values = [deletePresale.id_presale];
             const [result] = yield db_1.default.execute(sql, values);
             return result.affectedRows; // Devuelve el número de filas afectadas.
@@ -196,14 +200,14 @@ class PresaleRepository {
                 const productsSql = `INSERT INTO detalle_preventa (id_preventa, id_producto, cantidad, subtotal) VALUES (?, ?, ?, ?)`;
                 for (const detail of addProducts) {
                     // Obtener el precio del producto desde el microservicio de productos
-                    const productResponse = yield axios_1.default.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                    console.log('RESPUESTA COMPLETA', productResponse);
-                    console.log('RESPUESTAAXIOS', productResponse.data);
-                    const price = productResponse.data.precio;
+                    const productResponse = yield axios_1.default.get(`${process.env.PRODUCT_SERVICE_URL}${detail.id_producto}`);
+                    const productData = productResponse.data[0];
+                    console.log('RESPUESTA COMPLETA', productData.data);
+                    const price = parseFloat(productData.precio);
+                    console.log('PRICE:', price);
                     if (!price) {
                         throw new Error(`Precio no encontrado para el producto ${detail.id_producto}`);
                     }
-                    console.log('PRECIO.P', price);
                     // Calcular el subtotal
                     const subtotal = price * detail.cantidad;
                     // Insertar el detalle en la base de datos

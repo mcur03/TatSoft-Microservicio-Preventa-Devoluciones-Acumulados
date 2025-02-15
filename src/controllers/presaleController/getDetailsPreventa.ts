@@ -5,17 +5,21 @@ import DetailsPresaleDTO from "../../Dto/DtoPresale/detailsPresaleDto";
 import ProductDTO from "../../Dto/DtoPresale/productDto";
 import DetailPresaleDTO from "../../Dto/DtoPresale/detailPresaleDto";
 
+import dotenv from 'dotenv';
+
+dotenv.config();
+
 let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
     try {
         const userRole = req.body.role;
         const userId = req.body.id_usuario;
-        const { id_presale } = req.params;
-        console.log('ID INGRESADO: ', id_presale);
+        const { id_preventa } = req.params;
+        // console.log('ID INGRESADO: ', id_preventa);
 
         const result =
             userRole === "COLABORADOR"
-                ? await PresaleService.get_idsPresaleColaborador(id_presale, userId)
-                : await PresaleService.get_idsPresale(id_presale);
+                ? await PresaleService.get_idsPresaleColaborador(Number(id_preventa), userId)
+                : await PresaleService.get_idsPresale(id_preventa);
 
         // const presale = await PresaleService.get_idsPresale(id_presale, userId);
         if (!result) {
@@ -23,7 +27,7 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             return;
         }
 
-        console.log('RESPUESTA PRESALE: ', result);
+        // console.log('RESPUESTA PRESALE: ', result);
 
         if (!result.id_cliente || !result.id_colaborador) {
             res.status(400).json({ error: 'Datos de la preventa incompletos' });
@@ -31,17 +35,19 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
         }
 
         // Obtener datos del cliente
-        const client = await axios.get(`http://localhost:10102/api/client/${result.id_cliente}`);
+        const client = await axios.get(`${process.env.CLIENT_SERVICE_URL}${result.id_cliente}`);
         console.log('CLIENTE: ', client.data);
-        
-        // Obtener datos del colaborador-usuario
-        const user = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${result.id_colaborador}`);
-        console.log('USER: ', user.data);
         
         // Obtener datos de todos los productos
         const ids = result.detalle.map((d: DetailsPresaleDTO) => d.id_producto).join(',');
-        const products = await axios.get(`http://localhost:10104/api/products?ids=${ids}`);
+        const products = await axios.get(`${process.env.PRODUCT_SERVICE_URL}${ids}`);
         console.log('PRODUCTOS: ', products.data);
+
+        // Obtener datos del colaborador-usuario
+        const user = await axios.get(`${process.env.USER_SERVICE_URL}${result.id_colaborador}`);
+        console.log('USER: ', user.data);
+ 
+
         
         // Construir la respuesta final
         res.status(200).json({
@@ -53,11 +59,11 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
                 razon_social: client.data.razon_social,
             },
             colaborador: {
-                nombre: user.data,
+                nombre: user.data.nombreCompleto,
             },
             productos: result.detalle.map((d: DetailPresaleDTO) => {
-                const producto = products.data.products.find((p: ProductDTO) => p.id_producto === d.id_producto);
-                console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
+                const producto = products.data.find((p: ProductDTO) => p.id_producto === d.id_producto);
+                // console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
                 
                 return {
                     nombre: producto?.nombre_producto || 'Producto no encontrado',
@@ -70,8 +76,15 @@ let get_detailsPresale = async (req: Request, res: Response): Promise<void> => {
             estado: result.estado,
         });
     } catch (error: any) {
-        console.error(error);
-        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
+        if (axios.isAxiosError(error)) {
+            if (error.response?.status === 404) {
+              res.status(404).json({ message: 'La información no existe' });
+            }
+            res.status(error.response?.status || 500).json({ message: 'Error en el microservicio productos, clientes o usuarios' });
+          }
+      
+          console.error(error);
+          res.status(500).json({ message: 'Error en el servidor' });
     }
 };
 

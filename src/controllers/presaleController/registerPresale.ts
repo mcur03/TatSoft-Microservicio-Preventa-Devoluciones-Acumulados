@@ -14,7 +14,7 @@ let register_presale = async (req: Request, res: Response) => {
             new DetailsPresale('', detalle.id_producto, detalle.cantidad)
         );
 
-        const presaleId = await PresaleService.register_presale(presale, details);
+        await PresaleService.register_presale(presale, details);
 
         res.status(201).json({ message: 'Preventa creada'});
     } catch (error:any) {

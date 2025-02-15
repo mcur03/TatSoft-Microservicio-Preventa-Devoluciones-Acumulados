@@ -1,0 +1,1545 @@
+openapi: 3.0.0
+info:
+  title: Microservicio Preventa, Ventas y Devolciones
+  version: "1.0.0"
+  description: API para la gestión de las preventas, visualización de ventas y devoluciones 
+servers:
+  - url: http://localhost:10103
+    description: Servidor del microservicio preventas, ventas y devoluciones 
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+# Preventas
+  /registerPresale:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Registrar una preventa
+      description: Registrar una preventa a un cliente.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_cliente:
+                  type: string
+                  description: ID del cliente asociado a la preventa.
+                  example: 1
+                detalles:
+                  type: array
+                  description: Lista de productos en la preventa.
+                  items:
+                    type: object
+                    properties:
+                      id_producto:
+                        type: integer
+                        description: ID del producto.
+                        example: 1
+                      cantidad:
+                        type: integer
+                        description: Cantidad del producto.
+                        example: 2
+      responses:
+        "201":
+          description: Preventa creada correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de confirmación.
+                    example: Preventa creada
+        "401":
+          desc:
+          ription: token inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "token inválido o expirado"
+        "403":
+          description: No autorizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: No autorizado
+        "422":
+          description: Error de validación en los datos enviados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  errors:
+                    type: array
+                    description: Lista de errores de validación.
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: Tipo de error.
+                        value:
+                          type: array
+                          description: Valor enviado en el campo (puede estar vacío o incorrecto).
+                          items:
+                            type: string
+                          example: []
+                        msg:
+                          type: string
+                          description: Mensaje de error detallado.
+                          example: "Debe incluir al menos un detalle en la preventa"
+                        path:
+                          type: string
+                          description: Campo que causó el error.
+                          example: "detalles"
+                        location:
+                          type: string
+                          description: Ubicación del error en la solicitud.
+                          example: "body"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  details:
+                    type: string
+                    example: "Bind parameters must not contain undefined. To pass SQL NULL specify JS null"
+            
+  /addProductsPresale/{id_presale}:
+    post:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Actualizar detalles de una preventa
+      description: Agregar productos a una preventa existente.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa a actualizar.
+          example: 5
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              description: Lista de productos con nuevas cantidades.
+              items:
+                type: object
+                properties:
+                  id_producto:
+                    type: integer
+                    description: ID del producto en la preventa.
+                    example: 1
+                  cantidad:
+                    type: integer
+                    description: Cantidad del producto.
+                    example: 15
+      responses:
+        "201":
+          description: Productos agregados
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de confirmación.
+                    example: "Productos agregados"
+        "400":
+          description: El cuerpo de la solicitud debe ser un arreglo de productos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de confirmación.
+                    example: "El cuerpo de la solicitud debe ser un arreglo de productos."
+        "401":
+          description: token inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "token inválido o expirado"
+        "403":
+          description: No autorizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "No autorizado"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Bind parameters must not contain undefined. To pass SQL NULL specify JS null"
+
+  /getAllPresales:
+      get:
+        security:
+        - BearerAuth: []
+        tags:
+          - Preventas
+        summary: Obtener todas las preventas
+        description: Obtener la lista de todas las preventa creadas.
+        responses:
+          "200":
+            description: Lista de preventas obtenida correctamente.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: array
+                      description: Lista de preventas.
+                      items:
+                        type: object
+                        properties:
+                          id_preventa:
+                            type: integer
+                            description: ID de la preventa.
+                            example: 4
+                          id_cliente:
+                            type: integer
+                            description: ID del cliente asociado.
+                            example: 2
+                          id_colaborador:
+                            type: integer
+                            description: ID del colaborador responsable.
+                            example: 3
+                          fecha_creacion:
+                            type: string
+                            format: date-time
+                            description: Fecha y hora de creación de la preventa.
+                            example: "2025-02-05T22:12:07.000Z"
+                          fecha_confirmacion:
+                            type: string
+                            format: date-time
+                            nullable: true
+                            description: Fecha de confirmación de la preventa (puede ser `null`).
+                            example: null
+                          estado:
+                            type: string
+                            description: Estado actual de la preventa.
+                            example: "Pendiente"
+                          total:
+                            type: string
+                            description: Total de la preventa.
+                            example: "17769.44"
+          "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "token inválido o expirado"
+          "403":
+            description: No autorizado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "No autorizado"
+          "500":
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Detalles específicos del error"
+
+  /getPresaleById/{id_presale}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Obtener una preventa por ID
+      description: Retorna una preventa específica según su ID.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa que se desea consultar.
+          example: 4
+      responses:
+        "200":
+          description: Preventa obtenida correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_preventa:
+                    type: integer
+                    description: ID de la preventa.
+                    example: 4
+                  id_cliente:
+                    type: integer
+                    description: ID del cliente asociado.
+                    example: 2
+                  id_colaborador:
+                    type: integer
+                    description: ID del colaborador responsable.
+                    example: 3
+                  fecha_creacion:
+                    type: string
+                    format: date-time
+                    description: Fecha y hora de creación de la preventa.
+                    example: "2025-02-05T22:12:07.000Z"
+                  fecha_confirmacion:
+                    type: string
+                    format: date-time
+                    nullable: true
+                    description: Fecha de confirmación de la preventa (es null ya que si es preventa aun no se ha confirmado).
+                    example: null
+                  estado:
+                    type: string
+                    description: Estado actual de la preventa.
+                    example: "Pendiente"
+                  total:
+                    type: string
+                    description: Total de la preventa.
+                    example: "17769"
+        "404":
+            description: Preventa no encontrada.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Preventa no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "No autorizado"
+        "500":
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Error interno del servidor"
+
+  /detailsPresale/{id_preventa}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Obtener los detalles de una preventa
+      description: Retorna los detalles de una preventa específica según su ID.
+      parameters:
+        - name: id_preventa
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa que se desea consultar.
+          example: 4
+      responses:
+        "200":
+          description: Detalle de la preventa obtenido correctamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_preventa:
+                    type: integer
+                    description: ID de la preventa.
+                    example: 4
+                  cliente:
+                    type: object
+                    description: Información del cliente asociado.
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del cliente.
+                        example: "María Rodríguez López"
+                      direccion:
+                        type: string
+                        description: Dirección del cliente.
+                        example: "Avenida Central 45, Bogotá"
+                      telefono:
+                        type: string
+                        description: Teléfono del cliente.
+                        example: "3109876543"
+                      razon_social:
+                        type: string
+                        nullable: true
+                        description: Razón social del cliente (puede ser `null`).
+                        example: 
+                  colaborador:
+                    type: object
+                    description: Información del colaborador asociado a la preventa.
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del colaborador.
+                        example: "Daniela Ossa"
+                  productos:
+                    type: array
+                    description: Lista de productos en la preventa.
+                    items:
+                      type: object
+                      properties:
+                        nombre:
+                          type: string
+                          description: Nombre del producto.
+                          example: "Leche Colanta"
+                        precio:
+                          type: string
+                          description: Precio unitario del producto.
+                          example: "3000.00"
+                        cantidad:
+                          type: integer
+                          description: Cantidad comprada del producto.
+                          example: 3
+                        subtotal:
+                          type: string
+                          description: Subtotal por producto.
+                          example: "9000.00"
+                  total:
+                    type: string
+                    description: Total de la preventa.
+                    example: "17769.44"
+                  estado:
+                    type: string
+                    description: Estado actual de la preventa.
+                    example: "Pendiente"
+        "404":
+            description: Preventa no encontrada.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Preventa no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "No autorizado"
+        "500":
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Error interno del servidor"
+
+  /cancelPreventa/{id_presale}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Cancelar una preventa
+      description: Cancela una preventa específica según su ID.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa que se desea cancelar.
+          example: 4
+      responses:
+        "200":
+          description: Preventa cancelada exitosamente.
+          content:
+            application/j son:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de confirmación.
+                    example: "La preventa fue cancelada"
+        "404":
+            description: Preventa no encontrada.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Preventa no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "No autorizado"
+        "500":
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Error interno del servidor"
+
+  /confirmPresale/{id_presale}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Confirmar una preventa
+      description: Confirma una preventa cambiando su estado y especificando los productos devueltos(solo lo hace el administrador).
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa que se desea confirmar.
+          example: 4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                returnedProductos:
+                  type: array
+                  description: Lista de IDs de productos que no se venderán.
+                  items:
+                    type: integer
+                  example: [3, 4]
+      responses:
+        "200":
+          description: Preventa confirmada exitosamente.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de confirmación.
+                    example: "La preventa fue confirmada con éxito"
+        "404":
+            description: Preventa no encontrada o ya confirmada.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Preventa no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      description: Mensaje de error.
+                      example: "token inválido o expirado"
+        "403":
+          description: No tienes permisos para realizar esta acción.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: Mensaje de error.
+                    example: "No autorizado"
+        "500":
+            description: Error interno del servidor.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      description: Mensaje de error.
+                      example: Internal Server Error
+                    details:
+                      type: string
+                      description: Detalles del error.
+                      example: "Error interno del servidor"
+                
+  /updatePresale/{id_preventa}:
+    put:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Actualizar una preventa
+      description: Modifica los detalles de una preventa existente.
+      parameters:
+        - name: id_preventa
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa que se desea actualizar.
+          example: 4
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id_producto:
+                  type: integer
+                  description: ID del producto a actualizar.
+                  example: 2
+                cantidad:
+                  type: integer
+                  description: Nueva cantidad del producto.
+                  example: 4
+      responses:
+        "200":
+          description: Preventa actualizada con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Preventa actualizado con éxito"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token inválido o malformado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt malformed"
+        "422":
+          description: Error de validación en los datos enviados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: array
+                    description: Lista de errores de validación.
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          description: Tipo de error.
+                          example: "field"
+                        msg:
+                          type: string
+                          description: Mensaje de error.
+                          example: "Ingresa un número de id valido"
+                        path:
+                          type: string
+                          description: Campo con error.
+                          example: "id_detalle"
+                        location:
+                          type: string
+                          description: Ubicación del error en la solicitud.
+                          example: "body"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Internal Server Error"
+                  details:
+                    type: string
+                    example: "Bind parameters must not contain undefined. To pass SQL NULL specify JS null"
+
+  /deletePresale/{id_preventa}:
+    delete:
+      security:
+        - BearerAuth: []
+      tags:
+        - Preventas
+      summary: Eliminar una preventa
+      description: Elimina una preventa existente por su ID.
+      parameters:
+        - name: id_preventa
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: ID de la preventa a eliminar.
+          example: 4
+      responses:
+        "200":
+          description: Preventa eliminada con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "La preventa fue eliminada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "404":
+          description: Preventa no encontrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Preventa no encontrado"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Bind parameters must not contain undefined. To pass SQL NULL specify JS null"
+
+# Ventas
+  /getAllSales:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Ventas
+      summary: Obtener todas las ventas confirmadas
+      description: Devuelve una lista de todas las preventas confirmadas como ventas.
+      responses:
+        "200":
+          description: Lista de ventas obtenida con éxito.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_preventa:
+                      type: integer
+                      description: ID de la preventa que fue confirmada como venta.
+                      example: 2
+                    fecha_confirmacion:
+                      type: string
+                      format: date-time
+                      description: Fecha en que la preventa fue confirmada.
+                      example: "2025-02-05T22:16:10.000Z"
+                    id_colaborador:
+                      type: integer
+                      description: ID del colaborador que confirmó la venta.
+                      example: 2
+                    id_cliente:
+                      type: integer
+                      description: ID del cliente que realizó la compra.
+                      example: 1
+                    total_vendido:
+                      type: string
+                      description: Monto total de la venta.
+                      example: "592.96"
+                    nombre_colaborador:
+                      type: string
+                      description: Nombre del colaborador que confirmó la venta.
+                      example: "Sebastian Velasco"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching sales data"
+
+  /getSaleDetails/{id_presale}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Ventas
+      summary: Obtener el detalle de una venta
+      description: Obtiene la información detallada de una venta específica usando el id_preventa.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          description: ID de la preventa confirmada como venta.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Detalle de la venta obtenido con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_preventa:
+                    type: integer
+                    description: ID de la preventa confirmada.
+                    example: 3
+                  cliente:
+                    type: object
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del cliente.
+                        example: "Juan Pérez Gómez"
+                      direccion:
+                        type: string
+                        description: Dirección del cliente.
+                        example: "Calle 123, Ciudad Principal"
+                      telefono:
+                        type: string
+                        description: Teléfono del cliente.
+                        example: "3001234567"
+                      razon_social:
+                        type: string
+                        nullable: true
+                        description: Razón social del cliente si aplica.
+                        example: "Comercial Pérez S.A.S"
+                  colaborador:
+                    type: object
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del colaborador que realizó la venta.
+                        example: "Daniela Ossa"
+                  productos:
+                    type: array
+                    description: Lista de productos vendidos.
+                    items:
+                      type: object
+                      properties:
+                        nombre:
+                          type: string
+                          description: Nombre del producto.
+                          example: "Laptop Dell Inspiron"
+                        precio:
+                          type: string
+                          description: Precio unitario del producto.
+                          example: "850.00"
+                        cantidad:
+                          type: integer
+                          description: Cantidad de productos vendidos.
+                          example: 1
+        "404":
+          description: Venta no encontrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Venta no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching sale detail"
+
+  /getByIdSale/{id_presale}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Ventas
+      summary: Obtener una venta por ID
+      description: Obtiene la información de una venta específica usando el id_preventa.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          description: ID de la preventa confirmada como venta.
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Venta obtenida con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: array
+                    description: Detalle de la venta.
+                    items:
+                      type: object
+                      properties:
+                        id_preventa:
+                          type: integer
+                          description: ID de la preventa confirmada.
+                          example: 2
+                        fecha_confirmacion:
+                          type: string
+                          format: date-time
+                          description: Fecha en la que se confirmó la venta.
+                          example: "2025-02-05T22:16:10.000Z"
+                        id_colaborador:
+                          type: integer
+                          description: ID del colaborador que realizó la venta.
+                          example: 2
+                        id_cliente:
+                          type: integer
+                          description: ID del cliente que realizó la compra.
+                          example: 1
+                        total_vendido:
+                          type: string
+                          description: Total de la venta confirmada.
+                          example: "592.96"
+        "404":
+          description: Venta no encontrada.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Venta no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching sale"
+
+# Devoluciones
+  /getAllRefund:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Devoluciones
+      summary: Obtener todas las devoluciones
+      description: Devuelve la lista de todas las devoluciones registradas en el sistema.
+      responses:
+        "200":
+          description: Lista de devoluciones obtenida con éxito.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id_preventa:
+                      type: integer
+                      description: ID de la preventa que generó la devolución.
+                      example: 2
+                    fecha_confirmacion:
+                      type: string
+                      format: date-time
+                      description: Fecha en la que se registró la devolución.
+                      example: "2025-02-05T22:16:10.000Z"
+                    id_colaborador:
+                      type: integer
+                      description: ID del colaborador que procesó la devolución.
+                      example: 2
+                    id_cliente:
+                      type: integer
+                      description: ID del cliente asociado a la devolución.
+                      example: 1
+                    total_devuelto:
+                      type: string
+                      description: Monto total devuelto en la operación.
+                      example: "850.00"
+                    nombre_colaborador:
+                      type: string
+                      description: Nombre del colaborador que procesó la devolución.
+                      example: "Sebastian Velasco"
+                    razon_social:
+                      type: string
+                      nullable: true
+                      description: Razón social de la empresa cliente (si aplica).
+                      example: "Comercial Pérez S.A.S"
+                    nombre_zona:
+                      type: string
+                      description: Zona geográfica asociada a la venta.
+                      example: "Zona Norte"
+        "404":
+          description: No se encontraron devoluciones.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "No hay devoluciones registradas"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching returns"
+
+  /getRefundDetails/{id_presale}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Devoluciones
+      summary: Obtener el detalle de una devolución
+      description: Devuelve el detalle de una devolución específica a partir del `id_preventa`.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          description: ID de la preventa asociada a la devolución.
+          schema:
+            type: integer
+          example: 2
+      responses:
+        "200":
+          description: Detalle de la devolución obtenido con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_preventa:
+                    type: integer
+                    description: ID de la preventa asociada a la devolución.
+                    example: 2
+                  cliente:
+                    type: object
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del cliente.
+                        example: "Juan Pérez Gómez"
+                      direccion:
+                        type: string
+                        description: Dirección del cliente.
+                        example: "Calle 123, Ciudad Principal"
+                      telefono:
+                        type: string
+                        description: Teléfono del cliente.
+                        example: "3001234567"
+                      razon_social:
+                        type: string
+                        nullable: true
+                        description: Razón social de la empresa cliente (si aplica).
+                        example: "Comercial Pérez S.A.S"
+                  colaborador:
+                    type: object
+                    properties:
+                      nombre:
+                        type: string
+                        description: Nombre del colaborador que procesó la devolución.
+                        example: "Sebastian Velasco"
+                  productos:
+                    type: array
+                    description: Lista de productos devueltos.
+                    items:
+                      type: object
+                      properties:
+                        nombre:
+                          type: string
+                          description: Nombre del producto devuelto.
+                          example: "Laptop Dell Inspiron"
+                        precio:
+                          type: string
+                          description: Precio del producto devuelto.
+                          example: "850.00"
+                        cantidad:
+                          type: integer
+                          description: Cantidad devuelta del producto.
+                          example: 1
+        "400":
+            description: Datos incompletos.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    error:
+                      type: string
+                      example: "Datos de la devolución incompletos"
+        "404":
+          description: No se encontró la devolución.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Devolución no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching return details"
+
+  /getByIdRefund/{id_presale}:
+    get:
+      security:
+        - BearerAuth: []
+      tags:
+        - Devoluciones
+      summary: Obtener una devolución por ID de preventa
+      description: Devuelve la información de una devolución específica a partir del `id_preventa`.
+      parameters:
+        - name: id_presale
+          in: path
+          required: true
+          description: ID de la preventa asociada a la devolución.
+          schema:
+            type: integer
+          example: 3
+      responses:
+        "200":
+          description: Devolución encontrada con éxito.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: array
+                    description: Lista con la información de la devolución.
+                    items:
+                      type: object
+                      properties:
+                        id_preventa:
+                          type: integer
+                          description: ID de la preventa asociada a la devolución.
+                          example: 3
+                        fecha_confirmacion:
+                          type: string
+                          format: date-time
+                          description: Fecha en la que se confirmó la devolución.
+                          example: "2025-02-06T00:55:13.000Z"
+                        id_colaborador:
+                          type: integer
+                          description: ID del colaborador que procesó la devolución.
+                          example: 3
+                        id_cliente:
+                          type: integer
+                          description: ID del cliente que realizó la devolución.
+                          example: 1
+                        total_devuelto:
+                          type: string
+                          description: Monto total devuelto.
+                          example: "8691.47"
+        "404":
+          description: No se encontró la devolución.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Devolución no encontrada"
+        "401":
+            description: token inválido o expirado.
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    message:
+                      type: string
+                      example: "token inválido o expirado"
+        "403":
+          description: No autorizado, token JWT inválido o expirado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "No autorizado"
+                  error:
+                    type: string
+                    example: "jwt expired"
+        "500":
+          description: Error interno del servidor.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Error interno del servidor"
+                  details:
+                    type: string
+                    example: "Unexpected error while fetching return data"

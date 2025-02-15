@@ -14,6 +14,7 @@ interface JwtPayload {
 }
 
 const verifyToken = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    console.log("Middleware verifyToken ejecutado");
     let authorization = req.get('Authorization');    
     if (authorization) {
         const token = authorization.split(' ')[1];

@@ -17,7 +17,7 @@ const updatePresaleDto_1 = __importDefault(require("../../Dto/DtoPresale/updateP
 let update_presale = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const userId = req.body.id_usuario;
-        const { id_preventa } = req.params;
+        const id_preventa = req.params.id_preventa;
         const { id_producto, cantidad } = req.body;
         const result = yield presaleService_1.default.updatePresale(new updatePresaleDto_1.default(id_preventa, id_producto, cantidad), userId);
         if (!result) {
