@@ -4,8 +4,8 @@ import DeletePresale from "../../Dto/DtoPresale/deletePresaleDto";
 
 let delete_presale = async (req: Request, res: Response) =>{
     try {
-        const { id_presale } = req.params;
-        const result = await PresaleService.deletePresale(new DeletePresale(id_presale));
+        const { id_preventa } = req.params;
+        const result = await PresaleService.deletePresale(new DeletePresale(id_preventa));
         
         if(!result){
             res.status(404).json({error: 'Preventa no encrontrado'});

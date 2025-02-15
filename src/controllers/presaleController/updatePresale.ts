@@ -5,7 +5,7 @@ import UpdatePresale from "../../Dto/DtoPresale/updatePresaleDto";
 let update_presale = async(req:Request, res:Response): Promise<void> =>{
     try {
         const userId = req.body.id_usuario;
-        const { id_preventa } = req.params;
+        const id_preventa  = req.params.id_preventa;
         const { id_producto, cantidad } = req.body;
 
         const result = await PresaleService.updatePresale(new UpdatePresale( id_preventa, id_producto, cantidad ), userId)

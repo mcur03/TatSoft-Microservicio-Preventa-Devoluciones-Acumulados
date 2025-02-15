@@ -17,6 +17,7 @@ const addProductsPresale_1 = __importDefault(require("../controllers/presaleCont
 const confirmPresale_1 = __importDefault(require("../controllers/presaleController/confirmPresale"));
 const idPresaleValidator_1 = require("../middleware/presaleMiddleware/idPresaleValidator");
 const idDetallePresaleValidator_1 = require("../middleware/presaleMiddleware/idDetallePresaleValidator");
+const updatePresaleValidator_1 = require("../middleware/presaleMiddleware/updatePresaleValidator");
 const deletePresale_1 = __importDefault(require("../controllers/presaleController/deletePresale"));
 const router = express_1.default.Router();
 // POST: Crear una preventa
@@ -28,14 +29,15 @@ router.get("/getAllPresales", verifyToken_1.default, (0, checkRoleAndPermission_
 // GET: Obtener presale por id
 router.get("/getPresaleById/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR", "COLABORADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, getByIdPresale_1.default);
 // GET: todo el detalle de la preventa
-router.get("/detailsPresale/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR", "COLABORADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, getDetailsPreventa_1.default);
+router.get("/detailsPresale/:id_preventa", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR", "COLABORADOR"]), idDetallePresaleValidator_1.validatorIdDetallePresale, idDetallePresaleValidator_1.validatorParamsIdDetallePresale, getDetailsPreventa_1.default);
+// 
 // PUT: cancelar una preventa
 router.put("/cancelPreventa/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["COLABORADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, cancelPresale_1.default);
 // PUT: confirmarPreventa
 //router.put("/confirmPresale/:id_presale", confirm_presale);
 router.put("/confirmPresale/:id_presale", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR"]), idPresaleValidator_1.validatorParamsIdPresale, idPresaleValidator_1.validatorIdPresale, confirmPresale_1.default);
 // PUT: Actualizar preventa
-router.put("/updatePresale/:id_preventa", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["COLABORADOR"]), idDetallePresaleValidator_1.validatorParamsIdDetallePresale, idDetallePresaleValidator_1.validatorIdDetallePresale, updatePresale_1.default);
+router.put("/updatePresale/:id_preventa", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["COLABORADOR"]), updatePresaleValidator_1.validatorParamsUpdatePresale, updatePresaleValidator_1.validatorUpdatePresale, updatePresale_1.default);
 // DELETE: eliminar preventa
 router.delete("/deletePresale/:id_preventa", verifyToken_1.default, (0, checkRoleAndPermission_1.default)(["ADMINISTRADOR"]), deletePresale_1.default);
 exports.default = router;

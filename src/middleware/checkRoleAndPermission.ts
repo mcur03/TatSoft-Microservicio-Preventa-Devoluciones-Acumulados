@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 
 const checkRoleAndPermission = (roles: string[], isOwnDataAllowed: boolean = false) => {
     return (req: Request, res: Response, next: NextFunction): void => {
+        console.log("Middleware checkRoleAndPermission ejecutado");
         const userRole = req.body.role; // Obtenido del payload del token
         const userId = req.body.cedula; // ID del colaborador (si es necesario verificar sus propios datos)
 
