@@ -32,7 +32,7 @@ let update_presale = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             res.status(500).json({ errorInfo: error.sqlMessage });
         }
         else {
-            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Error interno del servidor", details: error.message });
         }
     }
 });
