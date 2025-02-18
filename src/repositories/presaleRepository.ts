@@ -34,7 +34,6 @@ class PresaleRepository{
                 VALUES (?, ?, ?, ?)`;
 
             for (const detail of details) {
-                // Obtener el precio del producto desde el microservicio de productos
                 const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}${detail.id_producto}`);
                 const productData = productResponse.data[0];
                 console.log('PRODUCT_DATA', productData); 
@@ -118,7 +117,7 @@ class PresaleRepository{
         const sql = 'DELETE FROM preventas WHERE id_preventa = ?';
         const values = [deletePresale.id_presale];
         const [result]: any = await db.execute(sql, values);
-        return result.affectedRows; // Devuelve el número de filas afectadas.
+        return result.affectedRows;
     }
 
     static async cancel(cancelPresale: EstatePresale, id_colaborador: number){
@@ -141,7 +140,7 @@ class PresaleRepository{
             const preventa = preventaRows[0];
             if (!preventa || preventa.estado !== 'Pendiente') {
                 await connection.rollback();
-                return false; // Preventa no encontrada o ya confirmada
+                return false;
             }
 
             // Actualizar el estado de los productos devueltos
@@ -165,7 +164,6 @@ class PresaleRepository{
                 [id_presale]
             );
 
-            // Confirmar que la actualización fue exitosa
             if (updateResult.affectedRows === 0) {
                 await connection.rollback();
                 return false;
@@ -240,7 +238,7 @@ class PresaleRepository{
             return;
         } catch (error) {
             await connection.rollback();
-            throw error; // Re-lanzar el error para manejarlo
+            throw error; 
         } finally {
             connection.release();
         }
@@ -267,7 +265,7 @@ class PresaleRepository{
         const [rows]: any = await db.execute(sql, values);
     
         if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
+            return null;
         }
     
         // Agrupar productos en el array 'detalle'
@@ -302,7 +300,7 @@ class PresaleRepository{
         const [rows]: any = await db.execute(sql, values);
     
         if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
+            return null;
         }
     
         // Agrupar productos en el array 'detalle'

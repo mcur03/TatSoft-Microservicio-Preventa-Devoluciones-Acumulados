@@ -11,7 +11,6 @@ const checkRoleAndPermission = (roles: string[], isOwnDataAllowed: boolean = fal
             return;
         }
 
-        // Si `isOwnDataAllowed` es true, verifica que el colaborador solo acceda a sus propios datos
         if (isOwnDataAllowed && userRole === "COLABORADOR") {
             const idColaboradorFromRequest = req.body.cedula || req.params.cedula;
 

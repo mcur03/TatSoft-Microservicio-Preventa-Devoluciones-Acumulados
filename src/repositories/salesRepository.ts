@@ -70,7 +70,7 @@ static async getSaleDetails(id_presale: string){
         const [rows]:any = await db.execute(sql, values);
 
         if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
+            return null; 
         }
 
         const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
@@ -87,7 +87,6 @@ static async getSaleDetails(id_presale: string){
         }));
     
         return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
-        //return rows as SalesDTO[];
     }
 
 // Obtener el datelle de una venta como colaborador
@@ -114,7 +113,7 @@ static async getSaleDetailsColaborador(id_presale: string, userId:string){
         const [rows]:any = await db.execute(sql, values);
 
         if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
+            return null;
         }
 
         const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;

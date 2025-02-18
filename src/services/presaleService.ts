@@ -28,7 +28,6 @@ class PresaleService{
 
 // ----------------------------------------------------
     private static async populatePresalesWithNames(presales: any[]) {
-        // console.log('ENTRO ACÁ');
         const updatedPresales = await Promise.all(
             presales.map(async (presale) => {
                 try {
@@ -36,7 +35,6 @@ class PresaleService{
                     const clientResponse = await axios.get(
                         `${process.env.CLIENT_SERVICE_URL}${presale.id_cliente}`
                     );
-                    console.log('CLIENTERESPONSE:', clientResponse.data);
                     
                     presale.nombre_cliente = clientResponse.data.nombre_completo_cliente;
 
@@ -44,9 +42,6 @@ class PresaleService{
                     const userResponse = await axios.get(
                         `${process.env.USER_SERVICE_URL}${presale.id_colaborador}`
                     );
-                    console.log('USERIIIIDDDDD', presale.id_colaborador);
-                    
-                    console.log('USERrESPONSE:', userResponse.data);
                     
                     presale.nombre_colaborador = userResponse.data.nombreCompleto;
 

@@ -35,13 +35,11 @@ class RefundService{
             try {
                 // Obtener datos del colaborador (usuario)
                 const userResponse = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${refund.id_colaborador}`);;
-                console.log('USERRRRRRRRRR: ', userResponse.data);
                 
                 refund.nombre_colaborador = userResponse.data.nombreCompleto;
 
                 // Obtener datos del cliente y zona
                 const clientResponse = await axios.get(`http://localhost:10102/api/client/${refund.id_cliente}`);
-                console.log('DATACLIENT:', clientResponse.data);
                 refund.razon_social = clientResponse.data.razon_social;
                 refund.nombre_zona = clientResponse.data.zona;
             } catch (error) {

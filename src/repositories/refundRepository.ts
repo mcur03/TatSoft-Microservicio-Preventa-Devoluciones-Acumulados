@@ -70,12 +70,12 @@ static async getRefundDetails(id_presale: string){
         const [rows]:any = await db.execute(sql, values);
 
         if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
+            return null; 
         }
 
         const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
         const [totalRows]: any = await db.execute(totalSQL, [id_presale]);
-        const total = totalRows[0]?.total_devoluciones || 0; // Extraer solo el valor // <-- CORREGIDO
+        const total = totalRows[0]?.total_devoluciones || 0; 
         
         console.log('TOTALL:', total);
         
@@ -116,7 +116,7 @@ static async getRefundDetailsColaborador(id_presale: string, userId:string){
     const [rows]: any = await db.execute(sql, values);
 
     if (!rows || rows.length === 0) {
-        return null; // Preventa no encontrada
+        return null; 
     }
     const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
     const [totalRows]: any = await db.execute(totalSQL, [id_presale]);

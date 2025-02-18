@@ -38,7 +38,7 @@ const verifyToken = async (req: Request, res: Response, next: NextFunction): Pro
         } catch (error) {
             res.status(403).json({
                 status: 'No autorizado',
-                error: (error as Error).message // Mensaje de error detallado
+                error: (error as Error).message
             });
             return;
         }

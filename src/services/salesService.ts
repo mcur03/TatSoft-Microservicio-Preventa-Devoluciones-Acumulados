@@ -11,13 +11,11 @@ class SalesService{
             try {
                 // Obtener datos del colaborador (usuario)
                 const userResponse = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${sale.id_colaborador}`);;
-                console.log('USERRRRRRRRRR: ', userResponse.data);
                 
                 sale.nombre_colaborador = userResponse.data;
 
                 // Obtener datos del cliente y zona
                 const clientResponse = await axios.get(`http://localhost:10102/api/client/${sale.id_cliente}`);
-                console.log('DATACLIENT:', clientResponse.data);
                 sale.razon_social = clientResponse.data.razon_social;
                 sale.nombre_zona = clientResponse.data.zona;
             } catch (error) {
