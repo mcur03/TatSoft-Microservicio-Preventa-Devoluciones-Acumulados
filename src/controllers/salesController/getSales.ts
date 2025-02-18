@@ -23,7 +23,7 @@ const getAll_sales = async (req: Request, res: Response): Promise<void> => {
         if (error && error.code === "ER_DUP_ENTRY") {
             res.status(500).json({ errorInfo: error.sqlMessage });
         } else {
-            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Error interno del servidor", details: error.message });
         }
     }
 };

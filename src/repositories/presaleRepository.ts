@@ -11,7 +11,6 @@ import UpdatePresale from "../Dto/DtoPresale/updatePresaleDto";
 import dotenv from 'dotenv';
 
 dotenv.config();
-const PRODUCT_SERVICE_URL = process.env.PRODUCT_SERVICE_URL 
 
 class PresaleRepository{
 
@@ -36,30 +35,34 @@ class PresaleRepository{
 
             for (const detail of details) {
                 // Obtener el precio del producto desde el microservicio de productos
-                const productResponse = await axios.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                
-                const product = await axios.get(`http://localhost:10104/api/cantidadIngresada/${detail.id_producto}`);
-                console.log('DATAPRODUCT', product.data);
-                
+                const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}${detail.id_producto}`);
+                const productData = productResponse.data[0];
+                console.log('PRODUCT_DATA', productData); 
+                if (!productData) {
+                    throw new Error(`No se encontró información para el producto con ID ${detail.id_producto}`);
+                }
 
-                if (!product || product.data.cantidadIngreso < detail.cantidad) {
+                // Obtener el precio y la cantidad en stock
+                const price = parseFloat(productData.precio);
+                const stock = productData.cantidad_ingreso;
+                console.log('DATAPRODUCTooooooooooo', stock);
+
+                if (stock < detail.cantidad) {
                     throw new Error(`Stock insuficiente para el producto ${detail.id_producto}`);
                 }
 
-                const price = productResponse.data.precio;
                 const subtotal = price * detail.cantidad;
 
                 // Insertar el detalle en la base de datos
                 const detailValues = [presaleId, detail.id_producto, detail.cantidad, subtotal];
                 await connection.execute(detailSql, detailValues);
-                let cantidad = product.data.cantidadIngreso - detail.cantidad
+                let cantidad = stock - detail.cantidad
                 console.log('CANTIDADDDDD: ', cantidad);
                 
-                console.log('CANTIDAD-INGRESO:', product.data.cantidadIngreso);
                 console.log('CANTIDAD:', detail.cantidad);
                 
                   // Actualizar la cantidad en el microservicio de productos
-                await axios.put(`http://localhost:10104/api/products/actualizar-cantidad/${detail.id_producto}/${cantidad}`);
+                await axios.put(`${process.env.PRODUCT_SERVICE_URL_ACTUALIZAR_CANTIDAD}${detail.id_producto}/${cantidad}`);
             }
 
             // Paso 3: Calcular el total de la preventa
@@ -112,7 +115,7 @@ class PresaleRepository{
 
 // Eliminar preventa, administrador
     static async delete(deletePresale: DeletePresale){
-        const sql = 'DELETE FROM prevetas WHERE id_preventa = ?';
+        const sql = 'DELETE FROM preventas WHERE id_preventa = ?';
         const values = [deletePresale.id_presale];
         const [result]: any = await db.execute(sql, values);
         return result.affectedRows; // Devuelve el número de filas afectadas.
@@ -206,16 +209,16 @@ class PresaleRepository{
             const productsSql = `INSERT INTO detalle_preventa (id_preventa, id_producto, cantidad, subtotal) VALUES (?, ?, ?, ?)`;
             for (const detail of addProducts) {
                 // Obtener el precio del producto desde el microservicio de productos
-                const productResponse = await axios.get(`${PRODUCT_SERVICE_URL}/${detail.id_producto}`);
-                console.log('RESPUESTA COMPLETA', productResponse);
+                const productResponse = await axios.get(`${process.env.PRODUCT_SERVICE_URL}${detail.id_producto}`);
+                const productData = productResponse.data[0];
+                console.log('RESPUESTA COMPLETA', productData.data);
 
-                console.log('RESPUESTAAXIOS', productResponse.data);
-
-                const price = productResponse.data.precio;
+                const price = parseFloat(productData.precio);
+                console.log('PRICE:', price);
+                
                 if (!price) {
                     throw new Error(`Precio no encontrado para el producto ${detail.id_producto}`);
                 }
-                console.log('PRECIO.P', price);
 
                 // Calcular el subtotal
                 const subtotal = price * detail.cantidad;
@@ -279,7 +282,7 @@ class PresaleRepository{
     }
 
 // Obtener detalle de una preventa como colaborador
-    static async getIdsPresaleColaborador(id_presale: string, userId:number) {
+    static async getIdsPresaleColaborador(id_presale: number, userId:number) {
         const sql = `
             SELECT 
                 p.id_preventa, 

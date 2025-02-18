@@ -51,10 +51,10 @@ const getSaleDetails = async (req: Request, res: Response) => {
                 razon_social: client.data.razon_social,
             },
             colaborador: {
-                nombre: user.data,
+                nombre: user.data.nombreCompleto,
             },
             productos: result.detalle.map((d: DetailSaleDTO) => {
-                const producto = products.data.products.find((p: ProductDTO) => p.id_producto === d.id_producto);
+                const producto = products.data.find((p: ProductDTO) => p.id_producto === d.id_producto);
                 console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
                 
                 return {
@@ -69,7 +69,7 @@ const getSaleDetails = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error(error);
-        res.status(500).json({ error: 'Error interno del servidor', message: error.message });
+        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
     }
 };
 

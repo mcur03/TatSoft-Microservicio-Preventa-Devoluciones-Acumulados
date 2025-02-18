@@ -54,9 +54,11 @@ static async getRefundDetails(id_presale: string){
                 p.id_preventa,
                 p.fecha_confirmacion,
                 p.id_colaborador,
+                p.estado,
                 p.id_cliente,
                 dp.id_producto,
-                dp.cantidad
+                dp.cantidad,
+                dp.subtotal
             FROM preventas p
             JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
             WHERE p.estado = 'Confirmada'
@@ -71,12 +73,21 @@ static async getRefundDetails(id_presale: string){
             return null; // Preventa no encontrada
         }
 
-        const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+        const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+        const [totalRows]: any = await db.execute(totalSQL, [id_presale]);
+        const total = totalRows[0]?.total_devoluciones || 0; // Extraer solo el valor // <-- CORREGIDO
+        
+        console.log('TOTALL:', total);
+        
+
+        const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
         const detalle = rows.map((row: any) => ({
             id_producto: row.id_producto,
             cantidad: row.cantidad,
             subtotal: row.subtotal,
         }));
+        
+        console.log('DETALLEEE:', detalle);
     
         return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
     }
@@ -84,37 +95,44 @@ static async getRefundDetails(id_presale: string){
 // Obtener el datelle de una devolucion como colaborador
 static async getRefundDetailsColaborador(id_presale: string, userId:string){
     const sql = `
-            SELECT 
-                p.id_preventa,
-                p.fecha_confirmacion,
-                p.id_colaborador,
-                p.id_cliente,
-                dp.id_producto,
-                dp.cantidad
-            FROM preventas p
-            JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
-            WHERE p.estado = 'Confirmada'
-            AND dp.estado = 'devuelto'
-            AND p.id_preventa = ?
-            AND p.id_colaborador = ?;
-        `;
-        const values = [id_presale, userId];
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.estado,
+            p.id_cliente,
+            dp.id_producto,
+            dp.cantidad,
+            dp.subtotal
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.estado = 'Confirmada'
+        AND dp.estado = 'devuelto'
+        AND p.id_preventa = ?
+        AND p.id_colaborador = ?;
+    `;
+    const values = [id_presale, userId];
 
-        const [rows]:any = await db.execute(sql, values);
+    const [rows]: any = await db.execute(sql, values);
 
-        if (!rows || rows.length === 0) {
-            return null; // Preventa no encontrada
-        }
-
-        const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
-        const detalle = rows.map((row: any) => ({
-            id_producto: row.id_producto,
-            cantidad: row.cantidad,
-            subtotal: row.subtotal,
-        }));
-    
-        return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
+    if (!rows || rows.length === 0) {
+        return null; // Preventa no encontrada
     }
+    const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+    const [totalRows]: any = await db.execute(totalSQL, [id_presale]);
+    const total = totalRows[0]?.total_devoluciones || 0;
+
+    const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
+    const detalle = rows.map((row: any) => ({
+        id_producto: row.id_producto,
+        cantidad: row.cantidad,
+        subtotal: row.subtotal,
+    }));
+    console.log('DETALLEEE:', detalle);
+    
+
+    return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
+}
 
 // Obtener devoluciones por id como Administrador
 static async getById(getRedund : GetRefundDTO){
@@ -137,7 +155,7 @@ static async getById(getRedund : GetRefundDTO){
     return rows as GetRefundDTO[];
 }
 
-// Obtener preventa por ID como colaborador
+// Obtener devolucion por ID como colaborador
 static async getByIdColaborador(getRefund : GetRefundDTO, id_colaborador: number){
     const sql = `
         SELECT 
@@ -151,7 +169,7 @@ static async getByIdColaborador(getRefund : GetRefundDTO, id_colaborador: number
         WHERE p.id_preventa = ?
         AND p.id_colaborador = ?
         AND p.estado = 'Confirmada' 
-        AND dp.estado = 'vendido'
+        AND dp.estado = 'devuelto'
         GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
     `;
     const values = [getRefund.id_presale, id_colaborador]; 

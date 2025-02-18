@@ -37,7 +37,7 @@ let getById_Refund = (req, res) => __awaiter(void 0, void 0, void 0, function* (
             return;
         }
         else {
-            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Error interno del servidor", details: error.message });
             return;
         }
     }

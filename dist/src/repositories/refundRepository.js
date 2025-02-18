@@ -61,14 +61,17 @@ class RefundRepository {
     // Obtener el detalle de una devoculion como administrador
     static getRefundDetails(id_presale) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const sql = `
             SELECT 
                 p.id_preventa,
                 p.fecha_confirmacion,
                 p.id_colaborador,
+                p.estado,
                 p.id_cliente,
                 dp.id_producto,
-                dp.cantidad
+                dp.cantidad,
+                dp.subtotal
             FROM preventas p
             JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
             WHERE p.estado = 'Confirmada'
@@ -80,44 +83,56 @@ class RefundRepository {
             if (!rows || rows.length === 0) {
                 return null; // Preventa no encontrada
             }
-            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+            const [totalRows] = yield db_1.default.execute(totalSQL, [id_presale]);
+            const total = ((_a = totalRows[0]) === null || _a === void 0 ? void 0 : _a.total_devoluciones) || 0; // Extraer solo el valor // <-- CORREGIDO
+            console.log('TOTALL:', total);
+            const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
             const detalle = rows.map((row) => ({
                 id_producto: row.id_producto,
                 cantidad: row.cantidad,
                 subtotal: row.subtotal,
             }));
+            console.log('DETALLEEE:', detalle);
             return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
         });
     }
     // Obtener el datelle de una devolucion como colaborador
     static getRefundDetailsColaborador(id_presale, userId) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a;
             const sql = `
-            SELECT 
-                p.id_preventa,
-                p.fecha_confirmacion,
-                p.id_colaborador,
-                p.id_cliente,
-                dp.id_producto,
-                dp.cantidad
-            FROM preventas p
-            JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
-            WHERE p.estado = 'Confirmada'
-            AND dp.estado = 'devuelto'
-            AND p.id_preventa = ?
-            AND p.id_colaborador = ?;
-        `;
+        SELECT 
+            p.id_preventa,
+            p.fecha_confirmacion,
+            p.id_colaborador,
+            p.estado,
+            p.id_cliente,
+            dp.id_producto,
+            dp.cantidad,
+            dp.subtotal
+        FROM preventas p
+        JOIN detalle_preventa dp ON p.id_preventa = dp.id_preventa
+        WHERE p.estado = 'Confirmada'
+        AND dp.estado = 'devuelto'
+        AND p.id_preventa = ?
+        AND p.id_colaborador = ?;
+    `;
             const values = [id_presale, userId];
             const [rows] = yield db_1.default.execute(sql, values);
             if (!rows || rows.length === 0) {
                 return null; // Preventa no encontrada
             }
-            const { id_preventa, id_cliente, id_colaborador, total, estado } = rows[0];
+            const totalSQL = `SELECT SUM(subtotal) AS total_devoluciones FROM detalle_preventa WHERE estado = 'devuelto' AND id_preventa = ?`;
+            const [totalRows] = yield db_1.default.execute(totalSQL, [id_presale]);
+            const total = ((_a = totalRows[0]) === null || _a === void 0 ? void 0 : _a.total_devoluciones) || 0;
+            const { id_preventa, id_cliente, id_colaborador, estado } = rows[0];
             const detalle = rows.map((row) => ({
                 id_producto: row.id_producto,
                 cantidad: row.cantidad,
                 subtotal: row.subtotal,
             }));
+            console.log('DETALLEEE:', detalle);
             return { id_preventa, id_cliente, id_colaborador, total, estado, detalle };
         });
     }
@@ -143,7 +158,7 @@ class RefundRepository {
             return rows;
         });
     }
-    // Obtener preventa por ID como colaborador
+    // Obtener devolucion por ID como colaborador
     static getByIdColaborador(getRefund, id_colaborador) {
         return __awaiter(this, void 0, void 0, function* () {
             const sql = `
@@ -158,7 +173,7 @@ class RefundRepository {
         WHERE p.id_preventa = ?
         AND p.id_colaborador = ?
         AND p.estado = 'Confirmada' 
-        AND dp.estado = 'vendido'
+        AND dp.estado = 'devuelto'
         GROUP BY p.id_preventa, p.fecha_confirmacion, p.id_colaborador, p.id_cliente;
     `;
             const values = [getRefund.id_presale, id_colaborador];

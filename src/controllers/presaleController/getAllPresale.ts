@@ -16,8 +16,9 @@ const getAll_presale = async (req: Request, res: Response): Promise<void> => {
             return;
         }
         // const result = await PresaleService.getAllPresales();
-
-        res.status(200).json({ message: result });
+        console.log('RESULLLLT:', result);
+        
+        res.status(200).json({ result });
     } catch (error: any) {
         if (error && error.code === "ER_DUP_ENTRY") {
             res.status(500).json({ errorInfo: error.sqlMessage });

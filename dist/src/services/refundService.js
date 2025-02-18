@@ -47,7 +47,7 @@ class RefundService {
                     const userResponse = yield axios_1.default.get(`http://localhost:10101/api/usuarios/id_usuario/${refund.id_colaborador}`);
                     ;
                     console.log('USERRRRRRRRRR: ', userResponse.data);
-                    refund.nombre_colaborador = userResponse.data;
+                    refund.nombre_colaborador = userResponse.data.nombreCompleto;
                     // Obtener datos del cliente y zona
                     const clientResponse = yield axios_1.default.get(`http://localhost:10102/api/client/${refund.id_cliente}`);
                     console.log('DATACLIENT:', clientResponse.data);

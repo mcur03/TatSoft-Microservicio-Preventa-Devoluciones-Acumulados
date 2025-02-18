@@ -29,11 +29,11 @@ const getRefundDetails = async (req: Request, res: Response) => {
 
         // Obtener datos del cliente
         const client = await axios.get(`http://localhost:10102/api/client/${result.id_cliente}`);
-        console.log('CLIENTE: ', client.data);
+        // console.log('CLIENTE: ', client.data);
         
         // Obtener datos del colaborador-usuario
         const user = await axios.get(`http://localhost:10101/api/usuarios/id_usuario/${result.id_colaborador}`);
-        console.log('USER: ', user.data);
+        console.log('USER: ', user.data.nombreCompleto);
         
         // Obtener datos de todos los productos
         const ids = result.detalle.map((d: DetailRefundDTO) => d.id_producto).join(',');
@@ -50,10 +50,10 @@ const getRefundDetails = async (req: Request, res: Response) => {
                 razon_social: client.data.razon_social,
             },
             colaborador: {
-                nombre: user.data,
+                nombre: user.data.nombreCompleto,
             },
             productos: result.detalle.map((d: DetailRefundDTO) => {
-                const producto = products.data.products.find((p: ProductDTO) => p.id_producto === d.id_producto);
+                const producto = products.data.find((p: ProductDTO) => p.id_producto === d.id_producto);
                 console.log('PRODUCTOS: result.DETALLE.MAP: ', producto);
                 
                 return {
@@ -68,7 +68,7 @@ const getRefundDetails = async (req: Request, res: Response) => {
         });
     } catch (error: any) {
         console.error(error);
-        res.status(500).json({ error: 'Error interno del servidor', message: error.message });
+        res.status(500).json({ error: 'Error interno del servidor', details: error.message });
     }
 };
 

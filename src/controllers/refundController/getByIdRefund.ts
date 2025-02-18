@@ -25,7 +25,7 @@ let getById_Refund = async (req: Request, res: Response): Promise<void> => {
             res.status(500).json({ errorInfo: error.sqlMessage });
             return;
         } else {
-            res.status(500).json({ error: "Internal Server Error", details: error.message });
+            res.status(500).json({ error: "Error interno del servidor", details: error.message });
             return;
         }
     }
